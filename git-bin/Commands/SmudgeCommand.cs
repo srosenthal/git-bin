@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using GitBin.Remotes;
+using System.Threading;
 
 namespace GitBin.Commands
 {
@@ -27,7 +28,7 @@ namespace GitBin.Commands
             var stdin = Console.OpenStandardInput();
             var document = GitBinDocument.FromYaml(new StreamReader(stdin));
 
-            GitBinConsole.Write("Smudging {0}...", document.Filename);
+            GitBinConsole.Write("Smudging {0}:", document.Filename);
 
             DownloadMissingFiles(document.ChunkHashes);
 
@@ -40,28 +41,31 @@ namespace GitBin.Commands
 
             if (filesToDownload.Length == 0)
             {
-                GitBinConsole.WriteLineNoPrefix(" All chunks already present in cache\n");
+                GitBinConsole.WriteNoPrefix(" All chunks already present in cache\n");
             }
             else
             {
                 if (filesToDownload.Length == 1)
                 {
-                    GitBinConsole.WriteLineNoPrefix(" Downloading 1 chunk...");
+                    GitBinConsole.WriteNoPrefix(" Downloading 1 chunk: ");
                 }
                 else
                 {
-                    GitBinConsole.WriteLineNoPrefix(" Downloading {0} chunks...", filesToDownload.Length);
+                    GitBinConsole.WriteNoPrefix(" Downloading {0} chunks: ", filesToDownload.Length);
                 }
 
-                for (int i = 0; i < filesToDownload.Length; i++)
-                {
-                    using (new RemoteProgressPrinter(i + 1, filesToDownload.Length, _remote))
-                    {
-                        var file = filesToDownload[i];
-                        _remote.DownloadFile(_cacheManager.GetPathForFile(file), file);
-                    }
-                }
+                AsyncFileProcessor.ProcessFiles(filesToDownload, DownloadFile);
             }
+
+            GitBinConsole.WriteLine();
+        }
+
+        
+
+        private void DownloadFile(string[] filesToDownload, int indexToDownload)
+        {
+            var file = filesToDownload[indexToDownload];
+            _remote.DownloadFile(_cacheManager.GetPathForFile(file), file);
         }
 
         private void OutputReassembledChunks(IEnumerable<string> chunkHashes)

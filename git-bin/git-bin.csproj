@@ -61,6 +61,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AsyncFileProcessor.cs" />
     <Compile Include="Commands\ClearCommand.cs" />
     <Compile Include="Commands\PrintCommand.cs" />
     <Compile Include="Commands\PushCommand.cs" />

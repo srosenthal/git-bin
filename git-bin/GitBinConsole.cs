@@ -36,6 +36,11 @@ namespace GitBin
             Console.Error.WriteLine(message, args);
         }
 
+        public static void WriteLine()
+        {
+            Console.Error.WriteLine();
+        }
+
         public static void Flush()
         {
             Console.Error.Flush();
