@@ -10,17 +10,26 @@ namespace GitBin.Remotes
 {
     public class S3Remote : IRemote
     {
+        private const string S3KeyConfigName = "s3key";
+        private const string S3SecretKeyConfigName = "s3secretKey";
+        private const string S3BucketConfigName = "s3bucket";
+
         private const int RequestTimeoutInMinutes = 60;
         private const string InvalidAccessKeyErrorCode = "InvalidAccessKeyId";
         private const string InvalidSecurityErrorCode = "InvalidSecurity";
 
-        private readonly IConfigurationProvider _configurationProvider;
+        private readonly string _bucketName;
+        private readonly string _key;
+        private readonly string _secretKey;
+
         private AmazonS3 _client;
 
         public S3Remote(
             IConfigurationProvider configurationProvider)
         {
-            _configurationProvider = configurationProvider;
+            _bucketName = configurationProvider.GetString(S3BucketConfigName);
+            _key = configurationProvider.GetString(S3KeyConfigName);
+            _secretKey = configurationProvider.GetString(S3SecretKeyConfigName);
         }
 
         public GitBinFileInfo[] ListFiles()
@@ -29,7 +38,7 @@ namespace GitBin.Remotes
             var client = GetClient();
 
             var listRequest = new ListObjectsRequest();
-            listRequest.BucketName = _configurationProvider.S3Bucket;
+            listRequest.BucketName = _bucketName;
 
             ListObjectsResponse listResponse;
 
@@ -55,7 +64,7 @@ namespace GitBin.Remotes
             var client = GetClient();
 
             var putRequest = new PutObjectRequest();
-            putRequest.BucketName = _configurationProvider.S3Bucket;
+            putRequest.BucketName = _bucketName;
             putRequest.FilePath = fullPath;
             putRequest.Key = key;
             putRequest.Timeout = RequestTimeoutInMinutes*60000;
@@ -77,7 +86,7 @@ namespace GitBin.Remotes
             var client = GetClient();
 
             var getRequest = new GetObjectRequest();
-            getRequest.BucketName = _configurationProvider.S3Bucket;
+            getRequest.BucketName = _bucketName;
             getRequest.Key = key;
             getRequest.Timeout = RequestTimeoutInMinutes*60000;
 
@@ -102,8 +111,8 @@ namespace GitBin.Remotes
             if (_client == null)
             {
                 _client = AWSClientFactory.CreateAmazonS3Client(
-                    _configurationProvider.S3Key,
-                    _configurationProvider.S3SecretKey);
+                    _key,
+                    _secretKey);
             }
 
             return _client;
@@ -119,12 +128,12 @@ namespace GitBin.Remotes
 
         private string GetMessageFromException(AmazonS3Exception e)
         {
-            if (!string.IsNullOrEmpty(e.ErrorCode) &&
+            if (!String.IsNullOrEmpty(e.ErrorCode) &&
                 (e.ErrorCode == InvalidAccessKeyErrorCode ||
                  e.ErrorCode == InvalidSecurityErrorCode))
                 return "S3 error: check your access key and secret access key";
 
-            return string.Format("S3 error: code [{0}], message [{1}]", e.ErrorCode, e.Message);
+            return String.Format("S3 error: code [{0}], message [{1}]", e.ErrorCode, e.Message);
         }
     }
 }

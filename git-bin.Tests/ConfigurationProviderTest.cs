@@ -1,5 +1,6 @@
 ﻿using System;
 using GitBin;
+using GitBin.Remotes;
 using NUnit.Framework;
 using Moq;
 
@@ -15,9 +16,9 @@ namespace git_bin.Tests
         {
             _gitExecutor = new Mock<IGitExecutor>();
 
-            _gitExecutor.Setup(x => x.GetString(GetConfigArgumentString(ConfigurationProvider.S3KeyName))).Returns("a");
-            _gitExecutor.Setup(x => x.GetString(GetConfigArgumentString(ConfigurationProvider.S3SecretKeyName))).Returns("a");
-            _gitExecutor.Setup(x => x.GetString(GetConfigArgumentString(ConfigurationProvider.S3BucketName))).Returns("a");
+            _gitExecutor.Setup(x => x.GetString("config --get-regexp git-bin"))
+                .Returns("git-bin.KeyOne ValueOne\ngit-bin.KeyTwo 2");
+
             _gitExecutor.Setup(x => x.GetString("rev-parse --git-dir")).Returns("a");
         }
 
@@ -34,7 +35,7 @@ namespace git_bin.Tests
         [Test]
         public void ChunkSize_ValueIsPositive_GetsSet()
         {
-            _gitExecutor.Setup(x => x.GetLong(GetConfigArgumentStringForInt(ConfigurationProvider.ChunkSizeName))).Returns(42);
+            _gitExecutor.Setup(x => x.GetLong(GetConfigArgumentStringForInt(ConfigurationProvider.ChunkSizeConfigName))).Returns(42);
 
             var target = new ConfigurationProvider(_gitExecutor.Object);
 
@@ -44,7 +45,7 @@ namespace git_bin.Tests
         [Test]
         public void ChunkSize_ValueIsNegative_Throws()
         {
-            _gitExecutor.Setup(x => x.GetLong(GetConfigArgumentStringForInt(ConfigurationProvider.ChunkSizeName))).Returns(-42);
+            _gitExecutor.Setup(x => x.GetLong(GetConfigArgumentStringForInt(ConfigurationProvider.ChunkSizeConfigName))).Returns(-42);
 
             try
             {
@@ -61,7 +62,7 @@ namespace git_bin.Tests
         [Test]
         public void ChunkSize_ValueIsEmpty_SetToDefault()
         {
-            _gitExecutor.Setup(x => x.GetLong(GetConfigArgumentStringForInt(ConfigurationProvider.ChunkSizeName))).Returns((int?)null);
+            _gitExecutor.Setup(x => x.GetLong(GetConfigArgumentStringForInt(ConfigurationProvider.ChunkSizeConfigName))).Returns((int?)null);
 
             var target = new ConfigurationProvider(_gitExecutor.Object);
 
@@ -71,7 +72,7 @@ namespace git_bin.Tests
         [Test]
         public void MaximumCacheSize_ValueIsPositive_GetsSet()
         {
-            _gitExecutor.Setup(x => x.GetLong(GetConfigArgumentStringForInt(ConfigurationProvider.MaximumCacheSizeName))).Returns(42);
+            _gitExecutor.Setup(x => x.GetLong(GetConfigArgumentStringForInt(ConfigurationProvider.MaximumCacheSizeConfigName))).Returns(42);
 
             var target = new ConfigurationProvider(_gitExecutor.Object);
 
@@ -81,7 +82,7 @@ namespace git_bin.Tests
         [Test]
         public void MaximumCacheSize_ValueIsNegative_Throws()
         {
-            _gitExecutor.Setup(x => x.GetLong(GetConfigArgumentStringForInt(ConfigurationProvider.MaximumCacheSizeName))).Returns(-42);
+            _gitExecutor.Setup(x => x.GetLong(GetConfigArgumentStringForInt(ConfigurationProvider.MaximumCacheSizeConfigName))).Returns(-42);
 
             try
             {
@@ -98,98 +99,11 @@ namespace git_bin.Tests
         [Test]
         public void MaximumCacheSize_ValueIsEmpty_SetToDefault()
         {
-            _gitExecutor.Setup(x => x.GetLong(GetConfigArgumentStringForInt(ConfigurationProvider.MaximumCacheSizeName))).Returns((int?)null);
+            _gitExecutor.Setup(x => x.GetLong(GetConfigArgumentStringForInt(ConfigurationProvider.MaximumCacheSizeConfigName))).Returns((int?)null);
 
             var target = new ConfigurationProvider(_gitExecutor.Object);
 
             Assert.AreEqual(ConfigurationProvider.DefaultMaximumCacheSize, target.MaximumCacheSize);
-        }
-
-        [Test]
-        public void S3Key_HasValue_GetsSet()
-        {
-            string key = "i am a key";
-
-            _gitExecutor.Setup(x => x.GetString(GetConfigArgumentString(ConfigurationProvider.S3KeyName))).Returns(key);
-
-            var target = new ConfigurationProvider(_gitExecutor.Object);
-
-            Assert.AreEqual(key, target.S3Key);
-        }
-
-        [Test]
-        public void S3Key_NoValue_Throws()
-        {
-            _gitExecutor.Setup(x => x.GetString(GetConfigArgumentString(ConfigurationProvider.S3KeyName))).Returns(string.Empty);
-
-            try
-            {
-                var target = new ConfigurationProvider(_gitExecutor.Object);
-            }
-            catch (ಠ_ಠ)
-            {
-                Assert.Pass();
-            }
-
-            Assert.Fail("Exception not thrown for s3key");
-        }
-
-        [Test]
-        public void S3SecretKey_HasValue_GetsSet()
-        {
-            string key = "i am a key";
-
-            _gitExecutor.Setup(x => x.GetString(GetConfigArgumentString(ConfigurationProvider.S3SecretKeyName))).Returns(key);
-
-            var target = new ConfigurationProvider(_gitExecutor.Object);
-
-            Assert.AreEqual(key, target.S3SecretKey);
-        }
-
-        [Test]
-        public void S3SecretKey_NoValue_Throws()
-        {
-            _gitExecutor.Setup(x => x.GetString(GetConfigArgumentString(ConfigurationProvider.S3SecretKeyName))).Returns(string.Empty);
-
-            try
-            {
-                var target = new ConfigurationProvider(_gitExecutor.Object);
-            }
-            catch (ಠ_ಠ)
-            {
-                Assert.Pass();
-            }
-
-            Assert.Fail("Exception not thrown for S3SecretKey");
-        }
-
-        [Test]
-        public void S3Bucket_HasValue_GetsSet()
-        {
-            string key = "i am a key";
-
-            _gitExecutor.Setup(x => x.GetString(GetConfigArgumentString(ConfigurationProvider.S3BucketName))).Returns(key);
-
-            var target = new ConfigurationProvider(_gitExecutor.Object);
-
-            Assert.AreEqual(key, target.S3Bucket);
-        }
-
-        [Test]
-        public void S3Bucket_NoValue_Throws()
-        {
-            _gitExecutor.Setup(x => x.GetString(GetConfigArgumentString(ConfigurationProvider.S3BucketName))).Returns(string.Empty);
-
-            try
-            {
-                var target = new ConfigurationProvider(_gitExecutor.Object);
-            }
-            catch (ಠ_ಠ)
-            {
-                Assert.Pass();
-            }
-
-            Assert.Fail("Exception not thrown for S3Bucket");
         }
 
         [Test]

@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
+using GitBin.Remotes;
 
 namespace GitBin
 {
@@ -7,10 +9,10 @@ namespace GitBin
     {
         long ChunkSize { get; }
         long MaximumCacheSize { get; }
-        string S3Key { get; }
-        string S3SecretKey { get; }
-        string S3Bucket { get; }
         string CacheDirectory { get; }
+
+        long GetLong(string name, long defaultValue);
+        string GetString(string name);
     }
 
     public class ConfigurationProvider : IConfigurationProvider
@@ -20,52 +22,73 @@ namespace GitBin
 
         public const string DirectoryName = "git-bin";
         public const string SectionName = "git-bin";
-        public const string ChunkSizeName = "chunkSize";
-        public const string MaximumCacheSizeName = "maxCacheSize";
-        public const string S3KeyName = "s3key";
-        public const string S3SecretKeyName = "s3secretKey";
-        public const string S3BucketName = "s3bucket";
+        public const string ChunkSizeConfigName = "chunkSize";
+        public const string MaximumCacheSizeConfigName = "maxCacheSize";
 
         private readonly IGitExecutor _gitExecutor;
+        private readonly Dictionary<string, string> _configurationOptions;
 
         public long ChunkSize { get; private set; }
         public long MaximumCacheSize { get; private set; }
-        public string S3Key { get; private set; }
-        public string S3SecretKey { get; private set; }
-        public string S3Bucket { get; private set; }
         public string CacheDirectory { get; private set; }
 
         public ConfigurationProvider(IGitExecutor gitExecutor)
         {
             _gitExecutor = gitExecutor;
 
-            this.ChunkSize = GetLongValue(ChunkSizeName, DefaultChunkSize);
-            this.MaximumCacheSize = GetLongValue(MaximumCacheSizeName, DefaultMaximumCacheSize);
-            this.S3Key = GetStringValue(S3KeyName);
-            this.S3SecretKey = GetStringValue(S3SecretKeyName);
-            this.S3Bucket = GetStringValue(S3BucketName);
+            _configurationOptions = GetConfigurationOptions();
+
             this.CacheDirectory = GetCacheDirectory();
+            this.ChunkSize = GetLong(ChunkSizeConfigName, DefaultChunkSize);
+            this.MaximumCacheSize = GetLong(MaximumCacheSizeConfigName, DefaultMaximumCacheSize);
         }
 
-        private long GetLongValue(string name, long defaultValue)
+        private Dictionary<string, string> GetConfigurationOptions()
         {
-            var rawValue = _gitExecutor.GetLong("config --int " + SectionName + '.' + name);
+            var rawAllOptions = _gitExecutor
+                .GetString("config --get-regexp " + SectionName)
+                .Split(new[] { "\r\n", "\n" }, StringSplitOptions.RemoveEmptyEntries);
 
-            if (!rawValue.HasValue)
+            var options = new Dictionary<string, string>();
+
+            foreach (var option in rawAllOptions)
+            {
+                var optionKeyValue = option.Split(' ');
+
+                if (optionKeyValue.Length != 2)
+                    throw new ಠ_ಠ("Invalid config option: " + option);
+
+                var key = optionKeyValue[0]
+                    .Substring(optionKeyValue[0].IndexOf('.') + 1)
+                    .ToLowerInvariant();
+
+                options[key] = optionKeyValue[1];
+            }
+
+            return options;
+        }
+
+        public long GetLong(string name, long defaultValue)
+        {
+            string rawValue;
+
+            if (!_configurationOptions.TryGetValue(name.ToLowerInvariant(), out rawValue))
                 return defaultValue;
 
-            if (rawValue < 0)
+            var convertedValue = Convert.ToInt64(rawValue);
+
+            if (convertedValue < 0)
                 throw new ಠ_ಠ(name + " cannot be negative");
 
-            return rawValue.Value;
+            return convertedValue;
         }
 
-        private string GetStringValue(string name)
+        public string GetString(string name)
         {
-            var rawValue = _gitExecutor.GetString("config " + SectionName + '.' + name);
+            string rawValue;
 
-            if (string.IsNullOrEmpty(rawValue))
-                throw new ಠ_ಠ(name + " must be set");
+            if (!_configurationOptions.TryGetValue(name.ToLowerInvariant(), out rawValue))
+                throw new ಠ_ಠ('[' + name + "] must be set");
 
             return rawValue;
         }
