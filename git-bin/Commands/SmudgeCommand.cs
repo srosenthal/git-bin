@@ -60,8 +60,6 @@ namespace GitBin.Commands
             GitBinConsole.WriteLine();
         }
 
-        
-
         private void DownloadFile(string[] filesToDownload, int indexToDownload)
         {
             var file = filesToDownload[indexToDownload];

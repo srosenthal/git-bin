@@ -33,7 +33,13 @@ namespace GitBin
 
             var serializer = new YamlSerializer<GitBinDocument>();
             serializer.Serialize(stringWriter, document);
-  
+
+            if (Environment.OSVersion.Platform == PlatformID.MacOSX ||
+                Environment.OSVersion.Platform == PlatformID.Unix)
+            {
+                sb.Replace("\n", "\r\n");
+            }
+
             return sb.ToString();
         }
 

@@ -32,22 +32,28 @@ namespace GitBin.Commands
 
             var chunkBuffer = new byte[_configurationProvider.ChunkSize];
             int numberOfBytesRead;
+            int totalBytesInChunk = 0;
 
             var stdin = Console.OpenStandardInput();
 
             do
             {
-                numberOfBytesRead = stdin.Read(chunkBuffer, 0, chunkBuffer.Length);
+                numberOfBytesRead = stdin.Read(chunkBuffer, totalBytesInChunk, chunkBuffer.Length - totalBytesInChunk);
+                
+                totalBytesInChunk += numberOfBytesRead;
 
-                if (numberOfBytesRead > 0)
+                if (totalBytesInChunk == chunkBuffer.Length || numberOfBytesRead == 0)
                 {
-                    var hash = GetHashForChunk(chunkBuffer, numberOfBytesRead);
-                    _cacheManager.WriteFileToCache(hash, chunkBuffer, numberOfBytesRead);
+                    var hash = GetHashForChunk(chunkBuffer, totalBytesInChunk);
+                    _cacheManager.WriteFileToCache(hash, chunkBuffer, totalBytesInChunk);
                     document.RecordChunk(hash);
+                    totalBytesInChunk = 0;
                 }
-            } while (numberOfBytesRead == chunkBuffer.Length);
+            } while (numberOfBytesRead > 0);
 
-            Console.Write(GitBinDocument.ToYaml(document));
+            var yamlString = GitBinDocument.ToYaml(document);
+
+            Console.Write(yamlString);
             Console.Out.Flush();
         }
 
