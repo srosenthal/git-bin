@@ -62,8 +62,18 @@ namespace GitBin.Commands
 
         private void DownloadFile(string[] filesToDownload, int indexToDownload)
         {
-            var file = filesToDownload[indexToDownload];
-            _remote.DownloadFile(_cacheManager.GetPathForFile(file), file);
+            var filename = filesToDownload[indexToDownload];
+            var fullPath = _cacheManager.GetPathForFile(filename);
+
+            try
+            {
+                _remote.DownloadFile(fullPath, filename);
+            }
+            catch (ಠ_ಠ)
+            {
+                File.Delete(fullPath);
+                throw;
+            }
         }
 
         private void OutputReassembledChunks(IEnumerable<string> chunkHashes)
