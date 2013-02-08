@@ -38,16 +38,11 @@ namespace GitBin
         public void WriteFileToCache(string filename, byte[] contents, int contentLength)
         {
             var path = GetPathForFile(filename);
+            
+            if (File.Exists(path) && new FileInfo(path).Length == contentLength)
+                return;
 
-            if (File.Exists(path))
-            {
-                if (new FileInfo(path).Length == contents.Length)
-                    return;
-                else
-                    File.Delete(path);
-            }
-
-            var filestream = File.Create(path, contentLength, FileOptions.WriteThrough);
+            var filestream = new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.None, contentLength, FileOptions.WriteThrough);
             filestream.Write(contents, 0, contentLength);
             filestream.Close();
         }
@@ -55,14 +50,9 @@ namespace GitBin
         public void WriteFileToCache(string filename, Stream stream)
         {
             var path = GetPathForFile(filename);
-
+            
             if (File.Exists(path))
-            {
-                if (new FileInfo(path).Length == stream.Length)
                     return;
-                else
-                    File.Delete(path);
-            }
 
             var buffer = new byte[8192];
             
