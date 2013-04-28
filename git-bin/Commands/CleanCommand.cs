@@ -42,7 +42,7 @@ namespace GitBin.Commands
                 
                 totalBytesInChunk += numberOfBytesRead;
 
-                if (totalBytesInChunk == chunkBuffer.Length || numberOfBytesRead == 0)
+                if ((totalBytesInChunk == chunkBuffer.Length || numberOfBytesRead == 0) && totalBytesInChunk > 0)
                 {
                     var hash = GetHashForChunk(chunkBuffer, totalBytesInChunk);
                     _cacheManager.WriteFileToCache(hash, chunkBuffer, totalBytesInChunk);

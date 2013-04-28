@@ -41,7 +41,7 @@ namespace GitBin.Commands
 
             if (filesToDownload.Length == 0)
             {
-                GitBinConsole.WriteNoPrefix(" All chunks already present in cache\n");
+                GitBinConsole.WriteNoPrefix(" All chunks already present in cache");
             }
             else
             {
