@@ -108,3 +108,10 @@ git has a setting called `core.bigFileThreshold` that it uses to try to deal wit
 $ git config --global core.bigFileThreshold 2g
 ```
 
+When communicating with S3, the default protocol is HTTPS. This protocol doesn't always work,
+particularly with proxy servers, so you can fall back to the (less secure) HTTP protocol:
+
+```bash
+$ git config --global git-bin.protocol HTTP
+```
+
