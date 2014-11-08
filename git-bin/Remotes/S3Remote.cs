@@ -21,6 +21,7 @@ namespace GitBin.Remotes
         private readonly string _bucketName;
         private readonly string _key;
         private readonly string _secretKey;
+        private readonly AmazonS3Config _s3config;
 
         private AmazonS3 _client;
 
@@ -30,6 +31,11 @@ namespace GitBin.Remotes
             _bucketName = configurationProvider.GetString(S3BucketConfigName);
             _key = configurationProvider.GetString(S3KeyConfigName);
             _secretKey = configurationProvider.GetString(S3SecretKeyConfigName);
+
+            AmazonS3Config s3config = new AmazonS3Config();
+            s3config.CommunicationProtocol = (Amazon.S3.Model.Protocol) Enum.Parse(typeof(Amazon.S3.Model.Protocol), configurationProvider.Protocol, true);
+
+            _s3config = s3config;
         }
 
         public GitBinFileInfo[] ListFiles()
@@ -112,7 +118,8 @@ namespace GitBin.Remotes
             {
                 _client = AWSClientFactory.CreateAmazonS3Client(
                     _key,
-                    _secretKey);
+                    _secretKey,
+                    _s3config);
             }
 
             return _client;
