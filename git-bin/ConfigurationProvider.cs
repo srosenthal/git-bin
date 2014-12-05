@@ -10,20 +10,24 @@ namespace GitBin
         long ChunkSize { get; }
         long MaximumCacheSize { get; }
         string CacheDirectory { get; }
+        string Protocol { get; }
 
         long GetLong(string name, long defaultValue);
         string GetString(string name);
+        string GetString(string name, string defaultValue);
     }
 
     public class ConfigurationProvider : IConfigurationProvider
     {
         public const long DefaultChunkSize = 1024 * 1024;
         public const long DefaultMaximumCacheSize = long.MaxValue;
+        public const string DefaultProtocol = "HTTPS";
 
         public const string DefaultCacheDirectory = "git-bin";
         public const string SectionName = "git-bin";
         public const string ChunkSizeConfigName = "chunkSize";
         public const string MaximumCacheSizeConfigName = "maxCacheSize";
+        public const string ProtocolName = "protocol";
         public const string CacheDirectoryConfigName = "cacheDirectory";
 
         private readonly IGitExecutor _gitExecutor;
@@ -32,6 +36,7 @@ namespace GitBin
         public long ChunkSize { get; private set; }
         public long MaximumCacheSize { get; private set; }
         public string CacheDirectory { get; private set; }
+        public string Protocol { get; private set; }
 
         public ConfigurationProvider(IGitExecutor gitExecutor)
         {
@@ -42,6 +47,7 @@ namespace GitBin
             this.CacheDirectory = GetCacheDirectory(GetString(CacheDirectoryConfigName, DefaultCacheDirectory));
             this.ChunkSize = GetLong(ChunkSizeConfigName, DefaultChunkSize);
             this.MaximumCacheSize = GetLong(MaximumCacheSizeConfigName, DefaultMaximumCacheSize);
+            this.Protocol = GetString(ProtocolName, DefaultProtocol);
         }
 
         private Dictionary<string, string> GetConfigurationOptions()
