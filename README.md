@@ -115,3 +115,11 @@ particularly with proxy servers, so you can fall back to the (less secure) HTTP 
 $ git config --global git-bin.protocol HTTP
 ```
 
+You can configure where the git-bin cache is located. By default, it is the .git/git-bin folder
+within your repo. If you put it outside the repo (say, in ~/git-bin-cache) then you won't
+re-download all the chunks if you have to blow away your repo and re-clone. This is also useful
+if you want to pre-populate a build machine image with the majority of the chunks.
+
+```bash
+$ git config --global git-bin.cacheDirectory ~/git-bin-cache
+```
