@@ -70,11 +70,11 @@ namespace GitBin.Commands
 
             try
             {
-                int attemptCount = 0;
+                var attemptCount = 0;
                 for (; attemptCount < MAX_DOWNLOAD_ATTEMPT_COUNT; attemptCount++)
                 {
-                    byte[] chunkData = _remote.DownloadFile(chunkName);
-                    string chunkHash = CacheManager.GetHashForChunk(chunkData, chunkData.Length);
+                    var chunkData = _remote.DownloadFile(chunkName);
+                    var chunkHash = CacheManager.GetHashForChunk(chunkData, chunkData.Length);
 
                     // A chunk's name is its hash. If a download's name and hash don't match then try and download it again, because it failed the first time.
                     if (chunkName.Equals(chunkHash))

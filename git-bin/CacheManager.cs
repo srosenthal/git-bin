@@ -44,7 +44,7 @@ namespace GitBin
 
         public string WriteChunkToCache(byte[] contents, int contentLength)
         {
-            string chunkName = GetHashForChunk(contents, contentLength);
+            var chunkName = GetHashForChunk(contents, contentLength);
             var path = GetPathForChunk(chunkName);
             
             if (File.Exists(path))
@@ -90,7 +90,7 @@ namespace GitBin
         {
             var hasher = new SHA256Managed();
 
-            byte[] hashBytes = hasher.ComputeHash(chunkBuffer, 0, chunkLength);
+            var hashBytes = hasher.ComputeHash(chunkBuffer, 0, chunkLength);
             var hashString = BitConverter.ToString(hashBytes).Replace("-", String.Empty);
 
             return hashString;

@@ -31,8 +31,8 @@ namespace GitBin.Commands
             var document = new GitBinDocument(_filename);
 
             var chunkBuffer = new byte[_configurationProvider.ChunkSize];
-            int numberOfBytesRead;
-            int totalBytesInChunk = 0;
+            var numberOfBytesRead = 0;
+            var totalBytesInChunk = 0;
 
             var stdin = Console.OpenStandardInput();
 
@@ -44,7 +44,7 @@ namespace GitBin.Commands
 
                 if ((totalBytesInChunk == chunkBuffer.Length || numberOfBytesRead == 0) && totalBytesInChunk > 0)
                 {
-                    string chunkName = _cacheManager.WriteChunkToCache(chunkBuffer, totalBytesInChunk);
+                    var chunkName = _cacheManager.WriteChunkToCache(chunkBuffer, totalBytesInChunk);
                     document.RecordChunk(chunkName);
                     totalBytesInChunk = 0;
                 }

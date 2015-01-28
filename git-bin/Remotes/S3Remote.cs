@@ -96,10 +96,10 @@ namespace GitBin.Remotes
                 using (var getResponse = client.GetObject(getRequest))
                 {
                     getResponse.WriteObjectProgressEvent += (s, args) => ReportProgress(args);
-                    byte[] fileContent = new byte[getResponse.ContentLength];
+                    var fileContent = new byte[getResponse.ContentLength];
 
-                    int numberOfBytesRead = 0;
-                    int totalBytesRead = 0;
+                    var numberOfBytesRead = 0;
+                    var totalBytesRead = 0;
 
                     do
                     {
