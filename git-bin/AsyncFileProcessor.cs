@@ -57,7 +57,6 @@ namespace GitBin
                                 nextToReport = percentCompleted + 10;
                             }
 
-
                             if (lastException == null)
                             {
                                 lastException = exception;

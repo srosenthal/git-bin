@@ -25,7 +25,7 @@ namespace GitBin.Commands
             if (_isDryRun)
             {
                 GitBinConsole.WriteLine("clear dry run: would remove " +
-                    GitBinFileInfoUtils.GetHumanReadableSize(_cacheManager.ListFiles()));
+                    GitBinFileInfoUtils.GetHumanReadableSize(_cacheManager.ListChunks()));
             }
             else
             {

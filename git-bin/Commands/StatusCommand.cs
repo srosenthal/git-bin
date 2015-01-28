@@ -37,7 +37,7 @@ namespace GitBin.Commands
             _cacheManager = cacheManager;
             _remote = remote;
 
-            _filesInLocalCache = _cacheManager.ListFiles();
+            _filesInLocalCache = _cacheManager.ListChunks();
         }
 
         public void Execute()

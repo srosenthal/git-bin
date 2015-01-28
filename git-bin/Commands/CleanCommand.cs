@@ -44,9 +44,8 @@ namespace GitBin.Commands
 
                 if ((totalBytesInChunk == chunkBuffer.Length || numberOfBytesRead == 0) && totalBytesInChunk > 0)
                 {
-                    var hash = GetHashForChunk(chunkBuffer, totalBytesInChunk);
-                    _cacheManager.WriteFileToCache(hash, chunkBuffer, totalBytesInChunk);
-                    document.RecordChunk(hash);
+                    string chunkName = _cacheManager.WriteChunkToCache(chunkBuffer, totalBytesInChunk);
+                    document.RecordChunk(chunkName);
                     totalBytesInChunk = 0;
                 }
             } while (numberOfBytesRead > 0);
@@ -55,16 +54,6 @@ namespace GitBin.Commands
 
             Console.Write(yamlString);
             Console.Out.Flush();
-        }
-
-        private static string GetHashForChunk(byte[] chunkBuffer, int chunkLength)
-        {
-            var hasher = new SHA256Managed();
-
-            byte[] hashBytes = hasher.ComputeHash(chunkBuffer, 0, chunkLength);
-            var hashString = BitConverter.ToString(hashBytes).Replace("-", String.Empty);
-
-            return hashString;
         }
     }
 }

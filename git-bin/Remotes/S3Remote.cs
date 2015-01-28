@@ -42,7 +42,8 @@ namespace GitBin.Remotes
 
             ListObjectsResponse listResponse;
 
-            do {
+            do
+            {
                 listResponse = client.ListObjects(listRequest);
 
                 if (listResponse.S3Objects.Any())
@@ -67,7 +68,7 @@ namespace GitBin.Remotes
             putRequest.BucketName = _bucketName;
             putRequest.FilePath = fullPath;
             putRequest.Key = key;
-            putRequest.Timeout = RequestTimeoutInMinutes*60000;
+            putRequest.Timeout = RequestTimeoutInMinutes * 60000;
             putRequest.PutObjectProgressEvent += (s, args) => ReportProgress(args);
 
             try
@@ -75,32 +76,44 @@ namespace GitBin.Remotes
                 PutObjectResponse putResponse = client.PutObject(putRequest);
                 putResponse.Dispose();
             }
-            catch(AmazonS3Exception e)
+            catch (AmazonS3Exception e)
             {
                 throw new ಠ_ಠ(GetMessageFromException(e));
             }
         }
 
-        public void DownloadFile(string fullPath, string key)
+        public byte[] DownloadFile(string key)
         {
             var client = GetClient();
 
             var getRequest = new GetObjectRequest();
             getRequest.BucketName = _bucketName;
             getRequest.Key = key;
-            getRequest.Timeout = RequestTimeoutInMinutes*60000;
+            getRequest.Timeout = RequestTimeoutInMinutes * 60000;
 
             try
             {
                 using (var getResponse = client.GetObject(getRequest))
                 {
                     getResponse.WriteObjectProgressEvent += (s, args) => ReportProgress(args);
-                    getResponse.WriteResponseStreamToFile(fullPath);
+                    byte[] fileContent = new byte[getResponse.ContentLength];
+
+                    int numberOfBytesRead = 0;
+                    int totalBytesRead = 0;
+
+                    do
+                    {
+                        numberOfBytesRead = getResponse.ResponseStream.Read(fileContent, totalBytesRead, fileContent.Length - totalBytesRead);
+
+                        totalBytesRead += numberOfBytesRead;
+                    } while (numberOfBytesRead > 0 && totalBytesRead < fileContent.Length);
+
+                    return fileContent;
                 }
             }
-            catch(AmazonS3Exception e)
+            catch (AmazonS3Exception e)
             {
-                throw new ಠ_ಠ(GetMessageFromException(e));                
+                throw new ಠ_ಠ(GetMessageFromException(e));
             }
         }
 

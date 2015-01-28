@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using GitBin.Remotes;
 using System.Threading;
+using System.Diagnostics;
 
 namespace GitBin.Commands
 {
@@ -30,44 +31,67 @@ namespace GitBin.Commands
 
             GitBinConsole.Write("Smudging {0}:", document.Filename);
 
-            DownloadMissingFiles(document.ChunkHashes);
+            DownloadMissingChunks(document.ChunkHashes);
 
             OutputReassembledChunks(document.ChunkHashes);
         }
 
-        private void DownloadMissingFiles(IEnumerable<string> chunkHashes)
+        private void DownloadMissingChunks(IEnumerable<string> chunkHashes)
         {
-            var filesToDownload = _cacheManager.GetFilenamesNotInCache(chunkHashes);
+            string[] chunksToDownload = _cacheManager.GetChunksNotInCache(chunkHashes);
 
-            if (filesToDownload.Length == 0)
+            if (chunksToDownload.Length == 0)
             {
                 GitBinConsole.WriteNoPrefix(" All chunks already present in cache");
             }
             else
             {
-                if (filesToDownload.Length == 1)
+                if (chunksToDownload.Length == 1)
                 {
                     GitBinConsole.WriteNoPrefix(" Downloading 1 chunk: ");
                 }
                 else
                 {
-                    GitBinConsole.WriteNoPrefix(" Downloading {0} chunks: ", filesToDownload.Length);
+                    GitBinConsole.WriteNoPrefix(" Downloading {0} chunks: ", chunksToDownload.Length);
                 }
 
-                AsyncFileProcessor.ProcessFiles(filesToDownload, DownloadFile);
+                AsyncFileProcessor.ProcessFiles(chunksToDownload, DownloadChunk);
             }
 
             GitBinConsole.WriteLine();
         }
 
-        private void DownloadFile(string[] filesToDownload, int indexToDownload)
+        private void DownloadChunk(string[] filesToDownload, int indexToDownload)
         {
-            var filename = filesToDownload[indexToDownload];
-            var fullPath = _cacheManager.GetPathForFile(filename);
+            const int MAX_DOWNLOAD_ATTEMPT_COUNT = 10;
+
+            var chunkName = filesToDownload[indexToDownload];
+            var fullPath = _cacheManager.GetPathForChunk(chunkName);
 
             try
             {
-                _remote.DownloadFile(fullPath, filename);
+                int attemptCount = 0;
+                for (; attemptCount < MAX_DOWNLOAD_ATTEMPT_COUNT; attemptCount++)
+                {
+                    byte[] chunkData = _remote.DownloadFile(chunkName);
+                    string chunkHash = CacheManager.GetHashForChunk(chunkData, chunkData.Length);
+
+                    // A chunk's name is its hash. If a download's name and hash don't match then try and download it again, because it failed the first time.
+                    if (chunkName.Equals(chunkHash))
+                    {
+                        _cacheManager.WriteChunkToCache(chunkData, chunkData.Length);
+                        break;
+                    }
+                    else
+                    {
+                        Console.Error.WriteLine("Error downloading chunk '" + chunkName + "'. Retrying...");
+                    }
+                }
+
+                if (attemptCount >= MAX_DOWNLOAD_ATTEMPT_COUNT)
+                {
+                    throw new Exception("Exceeded retry attempts when downloading chunk: " + chunkName);
+                }
             }
             catch (ಠ_ಠ)
             {
@@ -82,7 +106,7 @@ namespace GitBin.Commands
 
             foreach (var chunkHash in chunkHashes)
             {
-                var chunkData = _cacheManager.ReadFileFromCache(chunkHash);
+                var chunkData = _cacheManager.ReadChunkFromCache(chunkHash);
                 stdout.Write(chunkData, 0, chunkData.Length);
             }
 

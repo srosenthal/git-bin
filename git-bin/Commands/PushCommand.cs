@@ -25,7 +25,7 @@ namespace GitBin.Commands
         public void Execute()
         {
             var filesInRemote = _remote.ListFiles();
-            var filesInCache = _cacheManager.ListFiles();
+            var filesInCache = _cacheManager.ListChunks();
 
             var filesToUpload = filesInCache.Except(filesInRemote).Select(x => x.Name).ToArray();
 
@@ -48,7 +48,7 @@ namespace GitBin.Commands
                     (files, index) =>
                     {
                         var file = filesToUpload[index];
-                        _remote.UploadFile(_cacheManager.GetPathForFile(file), file);
+                        _remote.UploadFile(_cacheManager.GetPathForChunk(file), file);
                     });
                 
             }

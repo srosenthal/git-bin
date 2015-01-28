@@ -2,18 +2,25 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
 
 namespace GitBin
 {
     public interface ICacheManager
     {
-        byte[] ReadFileFromCache(string filename);
-        void WriteFileToCache(string filename, byte[] contents, int contentLength);
-        void WriteFileToCache(string filename, Stream stream);
-        GitBinFileInfo[] ListFiles();
+        byte[] ReadChunkFromCache(string chunkName);
+
+        /// <summary>
+        /// Write a chunk to the local cache for future (and current) use.
+        /// </summary>
+        /// <param name="contents">Contents of the chunk</param>
+        /// <param name="contentLength">Length of the provided buffer to consider as part of the chunk</param>
+        /// <returns>Name of the chunk that was cached</returns>
+        string WriteChunkToCache(byte[] contents, int contentLength);
+        GitBinFileInfo[] ListChunks();
         void ClearCache();
-        string[] GetFilenamesNotInCache(IEnumerable<string> filenamesToCheck);
-        string GetPathForFile(string filename);
+        string[] GetChunksNotInCache(IEnumerable<string> filenamesToCheck);
+        string GetPathForChunk(string filename);
     }
 
     public class CacheManager : ICacheManager
@@ -25,9 +32,9 @@ namespace GitBin
             _cacheDirectoryInfo = Directory.CreateDirectory(configurationProvider.CacheDirectory);
         }
 
-        public byte[] ReadFileFromCache(string filename)
+        public byte[] ReadChunkFromCache(string chunkName)
         {
-            var path = GetPathForFile(filename);
+            var path = GetPathForChunk(chunkName);
 
             if (!File.Exists(path))
                 throw new ಠ_ಠ("Tried to read file from cache that does not exist. [" + path + ']');
@@ -35,40 +42,22 @@ namespace GitBin
             return File.ReadAllBytes(path);
         }
 
-        public void WriteFileToCache(string filename, byte[] contents, int contentLength)
+        public string WriteChunkToCache(byte[] contents, int contentLength)
         {
-            var path = GetPathForFile(filename);
+            string chunkName = GetHashForChunk(contents, contentLength);
+            var path = GetPathForChunk(chunkName);
             
-            if (File.Exists(path) && new FileInfo(path).Length == contentLength)
-                return;
+            if (File.Exists(path))
+                return chunkName;
 
             var filestream = new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.None, contentLength, FileOptions.WriteThrough);
             filestream.Write(contents, 0, contentLength);
             filestream.Close();
+
+            return chunkName;
         }
 
-        public void WriteFileToCache(string filename, Stream stream)
-        {
-            var path = GetPathForFile(filename);
-            
-            if (File.Exists(path))
-                    return;
-
-            var buffer = new byte[8192];
-            
-            var fileStream = new FileStream(path, FileMode.CreateNew, FileAccess.Write, FileShare.None, buffer.Length, FileOptions.WriteThrough);
-
-            int bytesRead;
-            while ((bytesRead = stream.Read(buffer, 0, buffer.Length)) > 0)
-            {
-                fileStream.Write(buffer, 0, bytesRead);
-            }
-
-            fileStream.Close();
-            stream.Dispose();
-        }
-
-        public GitBinFileInfo[] ListFiles()
+        public GitBinFileInfo[] ListChunks()
         {
             var allFiles = _cacheDirectoryInfo.GetFiles();
             var gitBinFileInfos = allFiles.Select(fi => new GitBinFileInfo(fi.Name, fi.Length));
@@ -78,23 +67,33 @@ namespace GitBin
 
         public void ClearCache()
         {
-            foreach (var file in ListFiles())
+            foreach (var file in ListChunks())
             {
-                File.Delete(GetPathForFile(file.Name));
+                File.Delete(GetPathForChunk(file.Name));
             }
         }
 
-        public string[] GetFilenamesNotInCache(IEnumerable<string> filenamesToCheck)
+        public string[] GetChunksNotInCache(IEnumerable<string> chuckNamesToCheck)
         {
-            var filenamesInCache = ListFiles().Select(fi => fi.Name);
-            var filenamesNotInCache = filenamesToCheck.Except(filenamesInCache);
+            var filenamesInCache = ListChunks().Select(fi => fi.Name);
+            var filenamesNotInCache = chuckNamesToCheck.Except(filenamesInCache);
 
             return filenamesNotInCache.ToArray();
         }
 
-        public string GetPathForFile(string filename)
+        public string GetPathForChunk(string chunkName)
         {
-            return Path.Combine(_cacheDirectoryInfo.FullName, filename);
+            return Path.Combine(_cacheDirectoryInfo.FullName, chunkName);
+        }
+
+        public static string GetHashForChunk(byte[] chunkBuffer, int chunkLength)
+        {
+            var hasher = new SHA256Managed();
+
+            byte[] hashBytes = hasher.ComputeHash(chunkBuffer, 0, chunkLength);
+            var hashString = BitConverter.ToString(hashBytes).Replace("-", String.Empty);
+
+            return hashString;
         }
     }
 }
