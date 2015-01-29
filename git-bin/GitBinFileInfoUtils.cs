@@ -4,6 +4,9 @@ using System.Linq;
 
 namespace GitBin
 {
+    /// <summary>
+    /// Tools used to work with the Git Bin file information.
+    /// </summary>
     public static class GitBinFileInfoUtils
     {
         private static string[] Suffixes = new[] { "B", "k", "M", "G", "T", "P", "E" };

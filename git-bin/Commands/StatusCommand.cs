@@ -5,6 +5,9 @@ using GitBin.Remotes;
 
 namespace GitBin.Commands
 {
+    /// <summary>
+    /// Used to check the status of the local cache and remote cache if desired.
+    /// </summary>
     public class StatusCommand : ICommand
     {
         public const string ShowRemoteArgument = "-r";
@@ -14,6 +17,11 @@ namespace GitBin.Commands
         private readonly bool _shouldShowRemote;
         private readonly GitBinFileInfo[] _filesInLocalCache;
 
+        /// <param name="cacheManager">Manages the local cache and provides a set of methods to interface with the 
+        /// local cahce.</param>
+        /// <param name="remote">Provides a set of tools to interface with the remote cache.</param>
+        /// <param name="args">Arguement passed from the console describing whether or not to show the status of the 
+        /// remote bucket</param>
         public StatusCommand(
             ICacheManager cacheManager,
             IRemote remote,
@@ -40,6 +48,9 @@ namespace GitBin.Commands
             _filesInLocalCache = _cacheManager.ListChunks();
         }
 
+        /// <summary>
+        /// Prints the status about the local cache and if desired prints the status of the remote as well.
+        /// </summary>
         public void Execute()
         {
             PrintStatusAboutCache();
@@ -50,6 +61,9 @@ namespace GitBin.Commands
             }
         }
 
+        /// <summary>
+        /// Prints out the number of items present in the local cache and the size of the local cahce folder.
+        /// </summary>
         private void PrintStatusAboutCache()
         {
             GitBinConsole.WriteLineNoPrefix("Local cache:");
@@ -57,6 +71,10 @@ namespace GitBin.Commands
             GitBinConsole.WriteLineNoPrefix("  size:  {0}", GitBinFileInfoUtils.GetHumanReadableSize(_filesInLocalCache));
         }
 
+        /// <summary>
+        /// Prints out the number of items present in the remote and the size of those items. Also prints out how many 
+        /// items there are to push to the remote and the size of those items.
+        /// </summary>
         private void PrintStatusAboutRemote()
         {
             var remoteFiles = _remote.ListFiles();

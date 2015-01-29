@@ -5,11 +5,18 @@ using GitBin.Remotes;
 
 namespace GitBin.Commands
 {
+    /// <summary>
+    /// Used to push chunks in the users local cache to S3
+    /// </summary>
     public class PushCommand : ICommand
     {
         private readonly ICacheManager _cacheManager;
         private readonly IRemote _remote;
 
+        /// <param name="cacheManager">Manages the local cache and provides a set of methods to interface with the 
+        /// local cahce.</param>
+        /// <param name="remote">Provides a set of tools to interface with the remote cache.</param>
+        /// <param name="args">Arguments passed from the terminal when executed (there should not be any).</param>
         public PushCommand(
             ICacheManager cacheManager,
             IRemote remote,
@@ -22,6 +29,10 @@ namespace GitBin.Commands
             _remote = remote;
         }
 
+        /// <summary>
+        /// Decides what files are in the local cache but not in the remote cache, calls the AysncFileProcessor to 
+        /// uploads the files and verifies that the chunk is actaully correct.
+        /// </summary>
         public void Execute()
         {
             var filesInRemote = _remote.ListFiles();
@@ -64,6 +75,11 @@ namespace GitBin.Commands
 
         }
 
+        /// <summary>
+        /// Checks to ensure the integrity of the data by reading the file contents, caculating its hash, and comparing
+        /// it to the provided hash.
+        /// </summary>
+        /// <param name="chunkHash">Hash to be verified</param>
         private void verifyChunkIntegrity(string chunkHash)
         {
             var chunkPath = _cacheManager.GetPathForChunk(chunkHash);
