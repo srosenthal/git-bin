@@ -54,22 +54,28 @@ namespace GitBin.Remotes
             listRequest.BucketName = _bucketName;
             listRequest.MaxKeys = 250000; // Arbitrarily large to avoid making multiple round-trips.
 
-            ListObjectsResponse listResponse;
-
             do
             {
-                listResponse = client.ListObjects(listRequest);
+                ListObjectsResponse response = client.ListObjects(listRequest);
 
-                if (listResponse.S3Objects.Any())
+                // Process response.
+                if (response.S3Objects.Any())
                 {
-                    var keys = listResponse.S3Objects.Select(o => new GitBinFileInfo(o.Key, o.Size));
+                    var keys = response.S3Objects.Select(o => new GitBinFileInfo(o.Key, o.Size));
 
                     remoteFiles.AddRange(keys);
-
-                    listRequest.Marker = listResponse.NextMarker;
                 }
-            }
-            while (listResponse.IsTruncated);
+
+                // If response is truncated, set the marker to get the next set of keys.
+                if (response.IsTruncated)
+                {
+                    listRequest.Marker = response.NextMarker;
+                }
+                else
+                {
+                    listRequest = null;
+                }
+            } while (listRequest != null);
 
             return remoteFiles.ToArray();
         }
