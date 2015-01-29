@@ -17,11 +17,13 @@ namespace GitBin.Commands
         private readonly bool _shouldShowRemote;
         private readonly GitBinFileInfo[] _filesInLocalCache;
 
-        /// <param name="cacheManager">Manages the local cache and provides a set of methods to interface with the 
-        /// local cahce.</param>
+        /// <param name="cacheManager">
+        /// Manages the local cache and provides a set of methods to interface with the local cahce.
+        /// </param>
         /// <param name="remote">Provides a set of tools to interface with the remote cache.</param>
-        /// <param name="args">Arguement passed from the console describing whether or not to show the status of the 
-        /// remote bucket</param>
+        /// <param name="args">
+        /// Arguement passed from the console describing whether or not to show the status of the remote bucket
+        /// </param>
         public StatusCommand(
             ICacheManager cacheManager,
             IRemote remote,

@@ -13,8 +13,9 @@ namespace GitBin.Commands
         private readonly ICacheManager _cacheManager;
         private readonly bool _isDryRun;
 
-        /// <param name="cacheManager">Manages the local cache and provides a set of methods to interface with the 
-        /// local cahce</param>
+        /// <param name="cacheManager">
+        /// Manages the local cache and provides a set of methods to interface with the local cahce
+        /// </param>
         /// <param name="args">Argument passed in from the console either as a DryRun flag or a Force flag.</param>
         public ClearCommand(
             ICacheManager cacheManager,

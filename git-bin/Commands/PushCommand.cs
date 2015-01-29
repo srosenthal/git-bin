@@ -13,8 +13,9 @@ namespace GitBin.Commands
         private readonly ICacheManager _cacheManager;
         private readonly IRemote _remote;
 
-        /// <param name="cacheManager">Manages the local cache and provides a set of methods to interface with the 
-        /// local cahce.</param>
+        /// <param name="cacheManager">
+        /// Manages the local cache and provides a set of methods to interface with the local cahce.
+        /// </param>
         /// <param name="remote">Provides a set of tools to interface with the remote cache.</param>
         /// <param name="args">Arguments passed from the terminal when executed (there should not be any).</param>
         public PushCommand(

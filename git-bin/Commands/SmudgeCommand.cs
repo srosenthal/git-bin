@@ -15,8 +15,9 @@ namespace GitBin.Commands
         private readonly ICacheManager _cacheManager;
         private readonly IRemote _remote;
 
-        /// <param name="cacheManager">Manages the local cache and provides a set of methods to interface with the 
-        /// local cahce.</param>
+        /// <param name="cacheManager">
+        /// Manages the local cache and provides a set of methods to interface with the local cahce.
+        /// </param>
         /// <param name="remote">Provides a set of tools to interface with the remote cache.</param>
         /// <param name="args">Arguments passed from the console (there should not be any).</param>
         public SmudgeCommand(
@@ -87,8 +88,9 @@ namespace GitBin.Commands
         /// and writes it to the local cache.
         /// </summary>
         /// <param name="chunkHash">The specified hash for the chunk to be downloaded.</param>
-        /// <param name="progressListener">An entity that istens for progress events from the AsyncFileProcessor and 
-        /// prints it out to the console.</param>
+        /// <param name="progressListener">
+        /// An entity that istens for progress events from the AsyncFileProcessor and prints it out to the console.
+        /// </param>
         private void DownloadChunk(string chunkHash, Action<int> progressListener)
         {
             var fullPath = _cacheManager.GetPathForChunk(chunkHash);
