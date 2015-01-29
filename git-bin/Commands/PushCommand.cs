@@ -66,11 +66,11 @@ namespace GitBin.Commands
                 }
                 catch (InvalidDataException e)
                 {
-                    GitBinConsole.WriteNewLine(e.Message);
+                    GitBinConsole.WriteLine(e.Message);
                 }
                 catch (ಠ_ಠ e)
                 {
-                    GitBinConsole.WriteNewLine("Encountered an error uploading chunk: {0}", e.Message);
+                    GitBinConsole.WriteLine("Encountered an error uploading chunk: {0}", e.Message);
                 }
             }
 

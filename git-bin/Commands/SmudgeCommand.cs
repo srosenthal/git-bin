@@ -50,7 +50,7 @@ namespace GitBin.Commands
             }
             catch (ಠ_ಠ e)
             {
-                GitBinConsole.WriteNewLine("Encountered an error downloading chunk: {0}", e.Message);
+                GitBinConsole.WriteLine("Encountered an error downloading chunk: {0}", e.Message);
             }
         }
 
