@@ -63,7 +63,7 @@ namespace GitBin.Commands
 
         private void DownloadChunk(string chunkHash)
         {
-            const int MAX_DOWNLOAD_ATTEMPT_COUNT = 10;
+            const int MAX_DOWNLOAD_ATTEMPT_COUNT = 5;
 
             var fullPath = _cacheManager.GetPathForChunk(chunkHash);
 
