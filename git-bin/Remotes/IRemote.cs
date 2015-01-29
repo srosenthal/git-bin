@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 
 namespace GitBin.Remotes
@@ -7,9 +8,7 @@ namespace GitBin.Remotes
     {
         GitBinFileInfo[] ListFiles();
 
-        void UploadFile(string sourceFilePath, string destinationFileName);
-        byte[] DownloadFile(string fileName);
-
-        event Action<int> ProgressChanged;
+        void UploadFile(string sourceFilePath, string destinationFileName, Action<int> progressListener);
+        byte[] DownloadFile(string fileName, Action<int> progressListener);
     }
 }

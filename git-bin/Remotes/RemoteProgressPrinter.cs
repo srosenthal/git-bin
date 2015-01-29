@@ -6,46 +6,42 @@ namespace GitBin.Remotes
 {
     public class RemoteProgressPrinter : IDisposable
     {
-        private readonly IRemote _remote;
-        private readonly List<int> _percentagesToReport;
-        private bool _hasPrintedAnything;
+        private readonly int _chunkCount;
+        private readonly int[] mostRecentChunkPercentages;
+        private int summedChunkPercentage = 0;
 
-        public RemoteProgressPrinter(int chunkNumber, int totalChunks, IRemote remote)
+        //private double lastPrintedPercentage = -1;
+        private string lastPrintedStatusString = "";
+
+        public RemoteProgressPrinter(int chunkCount)
         {
-            GitBinConsole.WriteNoPrefix("  [{0}/{1}] -> ", chunkNumber, totalChunks);
-
-            _remote = remote;
-            _remote.ProgressChanged += OnProgressChanged;
-
-            _percentagesToReport = new List<int>{0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100};
+            _chunkCount = chunkCount;
+            mostRecentChunkPercentages = Enumerable.Repeat(0, chunkCount).ToArray();
         }
 
         public void Dispose()
         {
             GitBinConsole.WriteNoPrefix(Environment.NewLine);
-
-            _remote.ProgressChanged -= OnProgressChanged;
         }
 
-        private void OnProgressChanged(int percentageComplete)
+        public void OnProgressChanged(int chunkNumber, int percentageComplete)
         {
-            var percentagesToPrint = GetPercentagesBelowOrEqual(percentageComplete);
+            var chunkProgressDelta = percentageComplete - mostRecentChunkPercentages[chunkNumber];
+            mostRecentChunkPercentages[chunkNumber] = percentageComplete;
+            summedChunkPercentage += chunkProgressDelta;
+            double totalPercentage = (double)summedChunkPercentage / _chunkCount;
 
-            foreach (var percentToPrint in percentagesToPrint)
+            string percentageToPrint;
+            lock (this)
             {
-                GitBinConsole.WriteNoPrefix("{0}{1}", _hasPrintedAnything ? ".." : string.Empty, percentToPrint);
-                _hasPrintedAnything = true;
-                _percentagesToReport.Remove(percentToPrint);
+                percentageToPrint = String.Format("{0:N2}%", totalPercentage);
+
+                GitBinConsole.WriteNoPrefix(new String('\b', lastPrintedStatusString.Length) + percentageToPrint);
+                GitBinConsole.Flush();
+
+                lastPrintedStatusString = percentageToPrint;
             }
 
-            GitBinConsole.Flush();
-        }
-
-        private List<int> GetPercentagesBelowOrEqual(int percent)
-        {
-            return _percentagesToReport
-                .TakeWhile(x => x <= percent)
-                .ToList();
         }
     }
 }

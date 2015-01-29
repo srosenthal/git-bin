@@ -8,30 +8,32 @@ namespace GitBin
 {
     public static class AsyncFileProcessor
     {
-        public static void ProcessFiles(string[] filesToProcess, Action<string> fileProcessor)
+        public static void ProcessFiles(string[] filesToProcess, Action<string, Action<int>> fileProcessor)
         {
             object sync = new object();
+            RemoteProgressPrinter progressPrinter = new RemoteProgressPrinter(filesToProcess.Length);
 
-            int totalFinished = 0;
-            int nextIndexToProcess = 0;
+            int indexToProcess = 0;
             int totalProcessing = 0;
+            int processedFiles = 0;
             int maxSimultaneousProcessingOperations = 10;
             Exception lastException = null;
-            int nextToReport = 10;
 
             lock (sync)
             {
-                while (nextIndexToProcess < filesToProcess.Length)
+                while (indexToProcess < filesToProcess.Length)
                 {
-                    string fileToProcess = filesToProcess[nextIndexToProcess];
+                    int scopedIndexToProcess = indexToProcess;
                     totalProcessing++;
 
                     ThreadPool.QueueUserWorkItem(state =>
                     {
                         Exception exception = null;
+
                         try
                         {
-                            fileProcessor(fileToProcess);
+                            fileProcessor(filesToProcess[scopedIndexToProcess], (percentComplete) =>
+                                progressPrinter.OnProgressChanged(scopedIndexToProcess, percentComplete));
                         }
                         catch (Exception e)
                         {
@@ -41,19 +43,7 @@ namespace GitBin
                         lock (sync)
                         {
                             totalProcessing--;
-                            totalFinished++;
-
-                            var percentCompleted = (int)(100 * totalFinished / (float)filesToProcess.Length);
-
-                            if (percentCompleted >= nextToReport)
-                            {
-                                GitBinConsole.WriteNoPrefix(percentCompleted.ToString());
-                                if (percentCompleted < 100)
-                                {
-                                    GitBinConsole.WriteNoPrefix(".");
-                                }
-                                nextToReport = percentCompleted + 10;
-                            }
+                            processedFiles++;
 
                             if (lastException == null)
                             {
@@ -74,13 +64,15 @@ namespace GitBin
                         throw lastException;
                     }
 
-                    nextIndexToProcess++;
+                    indexToProcess++;
                 }
 
-                while (lastException == null && totalFinished < filesToProcess.Length)
+                while (lastException == null && processedFiles < filesToProcess.Length)
                 {
                     Monitor.Wait(sync);
                 }
+
+                progressPrinter.Dispose();
 
                 if (lastException != null)
                 {

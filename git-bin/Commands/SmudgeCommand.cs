@@ -36,9 +36,10 @@ namespace GitBin.Commands
                 DownloadMissingChunks(document.ChunkHashes);
                 OutputReassembledChunks(document.ChunkHashes);
             }
-            catch (ಠ_ಠ e)
+            catch (Exception e)
             {
                 GitBinConsole.WriteNewLine(e.Message);
+                Console.Error.Write(e);
             }
         }
 
@@ -62,38 +63,24 @@ namespace GitBin.Commands
                 }
 
                 AsyncFileProcessor.ProcessFiles(chunksToDownload, DownloadChunk);
-                GitBinConsole.WriteLine();
             }
         }
 
-        private void DownloadChunk(string chunkHash)
+        private void DownloadChunk(string chunkHash, Action<int> progressListener)
         {
-            const int MAX_DOWNLOAD_ATTEMPT_COUNT = 5;
-
             var fullPath = _cacheManager.GetPathForChunk(chunkHash);
+            var chunkData = _remote.DownloadFile(chunkHash, progressListener);
+            var computedChunkHash = CacheManager.GetHashForChunk(chunkData, chunkData.Length);
 
-            var attemptCount = 0;
-            for (; attemptCount < MAX_DOWNLOAD_ATTEMPT_COUNT; attemptCount++)
+            // A chunk's name is its hash. If a download's name and hash don't match then try and download it
+            // again, because it failed the first time.
+            if (chunkHash.Equals(computedChunkHash))
             {
-                var chunkData = _remote.DownloadFile(chunkHash);
-                var computedChunkHash = CacheManager.GetHashForChunk(chunkData, chunkData.Length);
-
-                // A chunk's name is its hash. If a download's name and hash don't match then try and download it
-                // again, because it failed the first time.
-                if (chunkHash.Equals(computedChunkHash))
-                {
-                    _cacheManager.WriteChunkToCache(chunkData, chunkData.Length);
-                    break;
-                }
-                else
-                {
-                    GitBinConsole.WriteNewLine("Error downloading chunk '" + chunkHash + "'. Retrying...");
-                }
+                _cacheManager.WriteChunkToCache(chunkData, chunkData.Length);
             }
-
-            if (attemptCount >= MAX_DOWNLOAD_ATTEMPT_COUNT)
+            else
             {
-                throw new ಠ_ಠ("Exceeded retry attempts when downloading chunk: " + chunkHash);
+                GitBinConsole.WriteNewLine("Downloaded a corrupted chunk (" + chunkHash + "). Aborting.");
             }
         }
 

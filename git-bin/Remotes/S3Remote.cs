@@ -71,55 +71,21 @@ namespace GitBin.Remotes
             return remoteFiles.ToArray();
         }
 
-        public void UploadFile(string sourceFilePath, string destinationFileName)
+        public void UploadFile(string sourceFilePath, string destinationFileName, Action<int> progressListener)
         {
-            string tempDestinationFileName = destinationFileName + "." + new Random().Next(0, 10000000) + ".partial";
             var client = GetClient();
 
-            // Step 1 - Prepare to upload the chunk to a temp file name
             var putRequest = new PutObjectRequest();
             putRequest.BucketName = _bucketName;
             putRequest.FilePath = sourceFilePath;
-            putRequest.Key = tempDestinationFileName;
+            putRequest.Key = destinationFileName;
             putRequest.Timeout = new TimeSpan(0, RequestTimeoutInMinutes, 0);
-            putRequest.StreamTransferProgress += (s, args) => ReportProgress(args.PercentDone);
+            putRequest.MD5Digest = GetMd5Hash(sourceFilePath);
+            putRequest.StreamTransferProgress += (s, args) => progressListener(args.PercentDone);
 
             try
             {
-                // Step 2 - Upload the chunk to S3, get the MD5 hash as reported by S3, and compute the MD5 hash
-                // locally.
-                PutObjectResponse putResponse = client.PutObject(putRequest);
-                string remotelyReportedMd5 = putResponse.ETag.Replace("\"", "");
-                string locallyCalculatedMd5 = GetMd5Hash(sourceFilePath);
-
-                // Step 3 - Compare the local and remote hashes. If they match, move the uploaded chunk to its final
-                // location.
-                try
-                {
-                    if (locallyCalculatedMd5.Equals(remotelyReportedMd5))
-                    {
-                        CopyObjectRequest copyRequest = new CopyObjectRequest();
-                        copyRequest.SourceBucket = _bucketName;
-                        copyRequest.SourceKey = tempDestinationFileName;
-                        copyRequest.DestinationBucket = _bucketName;
-                        copyRequest.DestinationKey = destinationFileName;
-
-                        client.CopyObject(copyRequest);
-                    }
-                    else
-                    {
-                        throw new ಠ_ಠ("Chunk '" + destinationFileName + "' was corrupted in transit to S3.");
-                    }
-                }
-                finally
-                {
-                    //Step 4 - Delete the temp file.
-                    DeleteObjectRequest deleteRequest = new DeleteObjectRequest();
-                    deleteRequest.BucketName = _bucketName;
-                    deleteRequest.Key = tempDestinationFileName;
-
-                    client.DeleteObject(deleteRequest);
-                }
+                client.PutObject(putRequest);
             }
             catch (AmazonS3Exception e)
             {
@@ -127,7 +93,7 @@ namespace GitBin.Remotes
             }
         }
 
-        public byte[] DownloadFile(string fileName)
+        public byte[] DownloadFile(string fileName, Action<int> progressListener)
         {
             var client = GetClient();
 
@@ -139,7 +105,6 @@ namespace GitBin.Remotes
             {
                 using (var getResponse = client.GetObject(getRequest))
                 {
-                    getResponse.WriteObjectProgressEvent += (s, args) => ReportProgress(args.PercentDone);
                     var fileContent = new byte[getResponse.ContentLength];
 
                     var numberOfBytesRead = 0;
@@ -150,6 +115,7 @@ namespace GitBin.Remotes
                         numberOfBytesRead = getResponse.ResponseStream.Read(fileContent, totalBytesRead, fileContent.Length - totalBytesRead);
 
                         totalBytesRead += numberOfBytesRead;
+                        progressListener.Invoke((totalBytesRead * 100) / fileContent.Length);
                     } while (numberOfBytesRead > 0 && totalBytesRead < fileContent.Length);
 
                     return fileContent;
@@ -161,8 +127,6 @@ namespace GitBin.Remotes
             }
         }
 
-        public event Action<int> ProgressChanged;
-
         private IAmazonS3 GetClient()
         {
             if (_client == null)
@@ -171,14 +135,6 @@ namespace GitBin.Remotes
             }
 
             return _client;
-        }
-
-        private void ReportProgress(int percentDone)
-        {
-            if (this.ProgressChanged != null)
-            {
-                this.ProgressChanged(percentDone);
-            }
         }
 
         private string GetMessageFromException(AmazonS3Exception e)
@@ -197,7 +153,7 @@ namespace GitBin.Remotes
             {
                 using (var stream = File.OpenRead(fileName))
                 {
-                    return BitConverter.ToString(md5.ComputeHash(stream)).Replace("-", "").ToLower();
+                    return Convert.ToBase64String(md5.ComputeHash(stream));
                 }
             }
         }

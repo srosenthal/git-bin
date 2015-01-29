@@ -46,12 +46,11 @@ namespace GitBin.Commands
 
                 try
                 {
-                    AsyncFileProcessor.ProcessFiles(filesToUpload, (chunkHash) =>
+                    AsyncFileProcessor.ProcessFiles(filesToUpload, (chunkHash, progressListener) =>
                     {
                         verifyChunkIntegrity(chunkHash);
-                        _remote.UploadFile(_cacheManager.GetPathForChunk(chunkHash), chunkHash);
+                        _remote.UploadFile(_cacheManager.GetPathForChunk(chunkHash), chunkHash, progressListener);
                     });
-                    Console.WriteLine();
                 }
                 catch (InvalidDataException e)
                 {
