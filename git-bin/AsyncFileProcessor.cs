@@ -16,8 +16,10 @@ namespace GitBin
         /// maximum of 10 current operations will take place.
         /// </summary>
         /// <param name="filesToProcess">List of files to process.</param>
-        /// <param name="fileProcessor">Processor that will act on each file. The first parameter of the processor is
-        /// the file to process, the second parameter is a listener for progress information.</param>
+        /// <param name="fileProcessor">
+        /// Processor that will act on each file. The first parameter of the processor is the file to process, the
+        /// second parameter is a listener for progress information.
+        /// </param>
         public static void ProcessFiles(string[] filesToProcess, Action<string, Action<int>> fileProcessor)
         {
             ProcessFiles(filesToProcess, 10, fileProcessor);
@@ -28,8 +30,10 @@ namespace GitBin
         /// </summary>
         /// <param name="filesToProcess">List of files to process.</param>
         /// <param name="maxSimultaneousProcessingOperations">Maximum number of concurrent operations.</param>
-        /// <param name="fileProcessor">Processor that will act on each file. The first parameter of the processor is
-        /// the file to process, the second parameter is a listener for progress information.</param>
+        /// <param name="fileProcessor">
+        /// Processor that will act on each file. The first parameter of the processor is the file to process, the
+        /// second parameter is a listener for progress information.
+        /// </param>
         public static void ProcessFiles(string[] filesToProcess, int maxSimultaneousProcessingOperations,
             Action<string, Action<int>> fileProcessor)
         {

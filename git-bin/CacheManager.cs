@@ -91,6 +91,10 @@ namespace GitBin
             var allFiles = _cacheDirectoryInfo.GetFiles();
             var gitBinFileInfos = allFiles.Select(fi => new GitBinFileInfo(fi.Name, fi.Length));
 
+            // Try to remove any items from the list that clearly are not chunks, such as those files that don't have
+            // exactly 64 characters in their name.
+            gitBinFileInfos = gitBinFileInfos.Where(info => info.Name.Length == 32 * 2);
+
             return gitBinFileInfos.ToArray();
         }
 
@@ -106,9 +110,6 @@ namespace GitBin
         {
             var chunksInCache = ListCachedChunks().Select(fi => fi.Name);
             var chunksNotInCache = chunkHashes.Except(chunksInCache);
-
-            // Try to remove any items from the list that clearly are not chunks, such as those files that don't have exactly 64 characters in their name.
-            chunksNotInCache = chunksNotInCache.Where(hash => hash.Length == 32 * 2);
 
             return chunksNotInCache.ToArray();
         }

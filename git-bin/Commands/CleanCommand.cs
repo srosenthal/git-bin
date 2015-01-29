@@ -13,12 +13,16 @@ namespace GitBin.Commands
         private readonly ICacheManager _cacheManager;
         private readonly string _filename;
 
-        /// <param name="configurationProvider">Provides the necessary configurations for remote and local actions.
+        /// <param name="configurationProvider">
+        /// Provides the necessary configurations for remote and local actions.
         /// </param>
-        /// <param name="cacheManager">Manages the local cache and provides a set of methods to interface with the 
-        /// local cahce.</param>
-        /// <param name="args">Specified file to be cleaned passed down from the terminal. There should only be one 
-        /// specifing which folder to look in.</param>
+        /// <param name="cacheManager">
+        /// Manages the local cache and provides a set of methods to interface with the  local cahce.
+        /// </param>
+        /// <param name="args">
+        /// Specified file to be cleaned passed down from the terminal. There should only be one specifing which folder
+        /// to look in.
+        /// </param>
         public CleanCommand(
             IConfigurationProvider configurationProvider,
             ICacheManager cacheManager,
