@@ -31,9 +31,15 @@ namespace GitBin.Commands
 
             GitBinConsole.Write("Smudging {0}:", document.Filename);
 
-            DownloadMissingChunks(document.ChunkHashes);
-
-            OutputReassembledChunks(document.ChunkHashes);
+            try
+            {
+                DownloadMissingChunks(document.ChunkHashes);
+                OutputReassembledChunks(document.ChunkHashes);
+            }
+            catch (ಠ_ಠ e)
+            {
+                GitBinConsole.WriteNewLine(e.Message);
+            }
         }
 
         private void DownloadMissingChunks(IEnumerable<string> chunkHashes)
@@ -55,17 +61,9 @@ namespace GitBin.Commands
                     GitBinConsole.WriteNoPrefix(" Downloading {0} chunks: ", chunksToDownload.Length);
                 }
 
-                try
-                {
-                    AsyncFileProcessor.ProcessFiles(chunksToDownload, DownloadChunk);
-                    GitBinConsole.WriteLine();
-                }
-                catch (ಠ_ಠ e)
-                {
-                    GitBinConsole.WriteNewLine(e.Message);
-                }
+                AsyncFileProcessor.ProcessFiles(chunksToDownload, DownloadChunk);
+                GitBinConsole.WriteLine();
             }
-
         }
 
         private void DownloadChunk(string chunkHash)

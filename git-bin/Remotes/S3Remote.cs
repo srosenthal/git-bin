@@ -7,6 +7,7 @@ using Amazon.S3;
 using Amazon.S3.Model;
 using System.Security.Cryptography;
 using System.Data;
+using Amazon.Runtime;
 
 namespace GitBin.Remotes
 {
@@ -25,17 +26,18 @@ namespace GitBin.Remotes
         private readonly string _secretKey;
         private readonly AmazonS3Config _s3config;
 
-        private AmazonS3 _client;
+        private IAmazonS3 _client;
 
-        public S3Remote(
-            IConfigurationProvider configurationProvider)
+        public S3Remote(IConfigurationProvider configurationProvider)
         {
             _bucketName = configurationProvider.GetString(S3BucketConfigName);
             _key = configurationProvider.GetString(S3KeyConfigName);
             _secretKey = configurationProvider.GetString(S3SecretKeyConfigName);
 
             AmazonS3Config s3config = new AmazonS3Config();
-            s3config.CommunicationProtocol = (Amazon.S3.Model.Protocol)Enum.Parse(typeof(Amazon.S3.Model.Protocol), configurationProvider.Protocol, true);
+            s3config.UseHttp = !String.Equals(configurationProvider.Protocol, "HTTPS",
+                StringComparison.OrdinalIgnoreCase);
+            s3config.RegionEndpoint = RegionEndpoint.GetBySystemName(configurationProvider.S3SystemName);
 
             _s3config = s3config;
         }
@@ -47,6 +49,7 @@ namespace GitBin.Remotes
 
             var listRequest = new ListObjectsRequest();
             listRequest.BucketName = _bucketName;
+            listRequest.MaxKeys = 250000; // Arbitrarily large to avoid making multiple round-trips.
 
             ListObjectsResponse listResponse;
 
@@ -60,7 +63,7 @@ namespace GitBin.Remotes
 
                     remoteFiles.AddRange(keys);
 
-                    listRequest.Marker = remoteFiles[remoteFiles.Count - 1].Name;
+                    listRequest.Marker = listResponse.NextMarker;
                 }
             }
             while (listResponse.IsTruncated);
@@ -78,9 +81,8 @@ namespace GitBin.Remotes
             putRequest.BucketName = _bucketName;
             putRequest.FilePath = sourceFilePath;
             putRequest.Key = tempDestinationFileName;
-            putRequest.GenerateMD5Digest = true;
-            putRequest.Timeout = RequestTimeoutInMinutes * 60000;
-            putRequest.PutObjectProgressEvent += (s, args) => ReportProgress(args);
+            putRequest.Timeout = new TimeSpan(0, RequestTimeoutInMinutes, 0);
+            putRequest.StreamTransferProgress += (s, args) => ReportProgress(args.PercentDone);
 
             try
             {
@@ -90,19 +92,18 @@ namespace GitBin.Remotes
                 string remotelyReportedMd5 = putResponse.ETag.Replace("\"", "");
                 string locallyCalculatedMd5 = GetMd5Hash(sourceFilePath);
 
-                putResponse.Dispose();
-
                 // Step 3 - Compare the local and remote hashes. If they match, move the uploaded chunk to its final
                 // location.
                 try
                 {
                     if (locallyCalculatedMd5.Equals(remotelyReportedMd5))
                     {
-                        CopyObjectRequest copyRequest = new CopyObjectRequest()
-                              .WithSourceBucket(_bucketName)
-                              .WithSourceKey(tempDestinationFileName)
-                              .WithDestinationBucket(_bucketName)
-                              .WithDestinationKey(destinationFileName);
+                        CopyObjectRequest copyRequest = new CopyObjectRequest();
+                        copyRequest.SourceBucket = _bucketName;
+                        copyRequest.SourceKey = tempDestinationFileName;
+                        copyRequest.DestinationBucket = _bucketName;
+                        copyRequest.DestinationKey = destinationFileName;
+
                         client.CopyObject(copyRequest);
                     }
                     else
@@ -113,9 +114,10 @@ namespace GitBin.Remotes
                 finally
                 {
                     //Step 4 - Delete the temp file.
-                    DeleteObjectRequest deleteRequest = new DeleteObjectRequest()
-                           .WithBucketName(_bucketName)
-                           .WithKey(tempDestinationFileName);
+                    DeleteObjectRequest deleteRequest = new DeleteObjectRequest();
+                    deleteRequest.BucketName = _bucketName;
+                    deleteRequest.Key = tempDestinationFileName;
+
                     client.DeleteObject(deleteRequest);
                 }
             }
@@ -132,13 +134,12 @@ namespace GitBin.Remotes
             var getRequest = new GetObjectRequest();
             getRequest.BucketName = _bucketName;
             getRequest.Key = fileName;
-            getRequest.Timeout = RequestTimeoutInMinutes * 60000;
 
             try
             {
                 using (var getResponse = client.GetObject(getRequest))
                 {
-                    getResponse.WriteObjectProgressEvent += (s, args) => ReportProgress(args);
+                    getResponse.WriteObjectProgressEvent += (s, args) => ReportProgress(args.PercentDone);
                     var fileContent = new byte[getResponse.ContentLength];
 
                     var numberOfBytesRead = 0;
@@ -162,24 +163,21 @@ namespace GitBin.Remotes
 
         public event Action<int> ProgressChanged;
 
-        private AmazonS3 GetClient()
+        private IAmazonS3 GetClient()
         {
             if (_client == null)
             {
-                _client = AWSClientFactory.CreateAmazonS3Client(
-                    _key,
-                    _secretKey,
-                    _s3config);
+                _client = AWSClientFactory.CreateAmazonS3Client( _key, _secretKey, _s3config);
             }
 
             return _client;
         }
 
-        private void ReportProgress(TransferProgressArgs args)
+        private void ReportProgress(int percentDone)
         {
             if (this.ProgressChanged != null)
             {
-                this.ProgressChanged(args.PercentDone);
+                this.ProgressChanged(percentDone);
             }
         }
 

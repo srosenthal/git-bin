@@ -9,8 +9,9 @@ namespace GitBin
     {
         long ChunkSize { get; }
         long MaximumCacheSize { get; }
-        string CacheDirectory { get; }
         string Protocol { get; }
+        string CacheDirectory { get; }
+        string S3SystemName { get; }
 
         long GetLong(string name, long defaultValue);
         string GetString(string name);
@@ -22,13 +23,15 @@ namespace GitBin
         public const long DefaultChunkSize = 1024 * 1024;
         public const long DefaultMaximumCacheSize = long.MaxValue;
         public const string DefaultProtocol = "HTTPS";
-
         public const string DefaultCacheDirectory = "git-bin";
+        public const string DefaultS3SystemName = "us-east-1";
+
         public const string SectionName = "git-bin";
         public const string ChunkSizeConfigName = "chunkSize";
         public const string MaximumCacheSizeConfigName = "maxCacheSize";
         public const string ProtocolName = "protocol";
         public const string CacheDirectoryConfigName = "cacheDirectory";
+        public const string S3SystemConfigName = "s3SystemName";
 
         private readonly IGitExecutor _gitExecutor;
         private readonly Dictionary<string, string> _configurationOptions;
@@ -37,6 +40,7 @@ namespace GitBin
         public long MaximumCacheSize { get; private set; }
         public string CacheDirectory { get; private set; }
         public string Protocol { get; private set; }
+        public string S3SystemName { get; private set; }
 
         public ConfigurationProvider(IGitExecutor gitExecutor)
         {
@@ -44,10 +48,11 @@ namespace GitBin
 
             _configurationOptions = GetConfigurationOptions();
 
-            this.CacheDirectory = GetCacheDirectory(GetString(CacheDirectoryConfigName, DefaultCacheDirectory));
             this.ChunkSize = GetLong(ChunkSizeConfigName, DefaultChunkSize);
             this.MaximumCacheSize = GetLong(MaximumCacheSizeConfigName, DefaultMaximumCacheSize);
             this.Protocol = GetString(ProtocolName, DefaultProtocol);
+            this.CacheDirectory = GetCacheDirectory(GetString(CacheDirectoryConfigName, DefaultCacheDirectory));
+            this.S3SystemName = GetString(S3SystemConfigName, DefaultS3SystemName);
         }
 
         private Dictionary<string, string> GetConfigurationOptions()
