@@ -30,9 +30,9 @@ namespace GitBin.Remotes
 
         public S3Remote(IConfigurationProvider configurationProvider)
         {
-            _bucketName = configurationProvider.GetString(S3BucketConfigName);
-            _key = configurationProvider.GetString(S3KeyConfigName);
-            _secretKey = configurationProvider.GetString(S3SecretKeyConfigName);
+            _bucketName = configurationProvider.S3Bucket;
+            _key = configurationProvider.S3Key;
+            _secretKey = configurationProvider.S3SecretKey;
 
             AmazonS3Config s3config = new AmazonS3Config();
             s3config.UseHttp = !String.Equals(configurationProvider.Protocol, "HTTPS",
@@ -95,7 +95,7 @@ namespace GitBin.Remotes
                 }
                 else
                 {
-                throw new ಠ_ಠ(GetMessageFromException(e));
+                    throw new ಠ_ಠ(GetMessageFromException(e));
                 }
             }
         }

@@ -10,10 +10,11 @@ namespace GitBin
         {
             try
             {
+                // Build the list of available commands and execute the one requested in the user-provided args.
                 var builder = new Builder();
                 ApplicationRegistrations.Register(builder);
                 var container = builder.Create();
-            
+
                 var commandFactory = container.Resolve<ICommandFactory>();
 
                 var command = commandFactory.GetCommand(args);

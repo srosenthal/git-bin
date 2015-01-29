@@ -52,7 +52,7 @@ namespace GitBin.Commands
             do
             {
                 numberOfBytesRead = stdin.Read(chunkBuffer, totalBytesInChunk, chunkBuffer.Length - totalBytesInChunk);
-                
+
                 totalBytesInChunk += numberOfBytesRead;
 
                 if ((totalBytesInChunk == chunkBuffer.Length || numberOfBytesRead == 0) && totalBytesInChunk > 0)

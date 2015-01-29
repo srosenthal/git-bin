@@ -5,17 +5,45 @@ using GitBin.Remotes;
 
 namespace GitBin
 {
+    /// <summary>
+    /// A single location to store all user-configurable options of this program.
+    /// </summary>
     public interface IConfigurationProvider
     {
+        /// <summary>
+        /// Maximum size (in bytes) of a chunk.
+        /// </summary>
         long ChunkSize { get; }
-        long MaximumCacheSize { get; }
+
+        /// <summary>
+        /// Transport protocol to use when communication with S3. Either HTTPS or HTTP.
+        /// </summary>
         string Protocol { get; }
+
+        /// <summary>
+        /// Local directory to use for chunk storage.
+        /// </summary>
         string CacheDirectory { get; }
+
+        /// <summary>
+        /// S3 system name that will be used when communicating with S3. Examples: "us-east-1", "us-west-2"
+        /// </summary>
         string S3SystemName { get; }
 
-        long GetLong(string name, long defaultValue);
-        string GetString(string name);
-        string GetString(string name, string defaultValue);
+        /// <summary>
+        /// S3 bucket (folder) that will be used to store and retrieve chunks.
+        /// </summary>
+        string S3Bucket { get; }
+
+        /// <summary>
+        /// S3 key (username) that will be used to authenticate with S3.
+        /// </summary>
+        string S3Key { get; }
+
+        /// <summary>
+        /// S3 secret key (password) that will be used to authenticate with S3.
+        /// </summary>
+        string S3SecretKey { get; }
     }
 
     public class ConfigurationProvider : IConfigurationProvider
@@ -32,6 +60,9 @@ namespace GitBin
         public const string ProtocolName = "protocol";
         public const string CacheDirectoryConfigName = "cacheDirectory";
         public const string S3SystemConfigName = "s3SystemName";
+        public const string S3BucketConfigName = "s3bucket";
+        public const string S3KeyConfigName = "s3key";
+        public const string S3SecretKeyConfigName = "s3secretKey";
 
         private readonly IGitExecutor _gitExecutor;
         private readonly Dictionary<string, string> _configurationOptions;
@@ -41,6 +72,9 @@ namespace GitBin
         public string CacheDirectory { get; private set; }
         public string Protocol { get; private set; }
         public string S3SystemName { get; private set; }
+        public string S3Bucket { get; private set; }
+        public string S3Key { get; private set; }
+        public string S3SecretKey { get; private set; }
 
         public ConfigurationProvider(IGitExecutor gitExecutor)
         {
@@ -52,7 +86,11 @@ namespace GitBin
             this.MaximumCacheSize = GetLong(MaximumCacheSizeConfigName, DefaultMaximumCacheSize);
             this.Protocol = GetString(ProtocolName, DefaultProtocol);
             this.CacheDirectory = GetCacheDirectory(GetString(CacheDirectoryConfigName, DefaultCacheDirectory));
+
             this.S3SystemName = GetString(S3SystemConfigName, DefaultS3SystemName);
+            this.S3Bucket = GetString(S3BucketConfigName);
+            this.S3Key = GetString(S3KeyConfigName);
+            this.S3SecretKey = GetString(S3SecretKeyConfigName);
         }
 
         private Dictionary<string, string> GetConfigurationOptions()
@@ -80,7 +118,7 @@ namespace GitBin
             return options;
         }
 
-        public long GetLong(string name, long defaultValue)
+        private long GetLong(string name, long defaultValue)
         {
             string rawValue;
 
@@ -95,12 +133,12 @@ namespace GitBin
             return convertedValue;
         }
 
-        public string GetString(string name)
+        private string GetString(string name)
         {
             return GetString(name, null);
         }
 
-        public string GetString(string name, string defaultValue)
+        private string GetString(string name, string defaultValue)
         {
             string rawValue;
 

@@ -6,7 +6,7 @@ namespace GitBin.Commands
     /// Used to show the user what command options are present.
     /// </summary>
     public class ShowUsageCommand : ICommand
-    {   
+    {
         /// <summary>
         /// Displays the git bin operations that can be executed.
         /// </summary>

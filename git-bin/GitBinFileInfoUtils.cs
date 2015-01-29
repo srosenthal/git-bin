@@ -13,7 +13,7 @@ namespace GitBin
 
         public static string GetHumanReadableSize(IEnumerable<GitBinFileInfo> fileInfos)
         {
-            var totalSize = fileInfos.Sum(fi => fi.Size);
+            var totalSize = fileInfos.Sum(fi => fi.SizeInBytes);
 
             return GetHumanReadableSize(totalSize);
         }

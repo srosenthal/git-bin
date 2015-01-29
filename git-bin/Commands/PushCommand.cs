@@ -36,7 +36,7 @@ namespace GitBin.Commands
         public void Execute()
         {
             var filesInRemote = _remote.ListFiles();
-            var filesInCache = _cacheManager.ListChunks();
+            var filesInCache = _cacheManager.ListCachedChunks();
 
             var filesToUpload = filesInCache.Except(filesInRemote).Select(x => x.Name).ToArray();
 
@@ -57,7 +57,7 @@ namespace GitBin.Commands
 
                 try
                 {
-                    AsyncFileProcessor.ProcessFiles(filesToUpload, (chunkHash, progressListener) =>
+                    AsyncFileProcessor.ProcessFiles(filesToUpload, 1, (chunkHash, progressListener) =>
                     {
                         verifyChunkIntegrity(chunkHash);
                         _remote.UploadFile(_cacheManager.GetPathForChunk(chunkHash), chunkHash, progressListener);

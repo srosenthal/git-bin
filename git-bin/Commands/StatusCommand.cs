@@ -45,7 +45,7 @@ namespace GitBin.Commands
             _cacheManager = cacheManager;
             _remote = remote;
 
-            _filesInLocalCache = _cacheManager.ListChunks();
+            _filesInLocalCache = _cacheManager.ListCachedChunks();
         }
 
         /// <summary>
@@ -78,7 +78,7 @@ namespace GitBin.Commands
         private void PrintStatusAboutRemote()
         {
             var remoteFiles = _remote.ListFiles();
-            
+
             GitBinConsole.WriteLineNoPrefix("\nRemote repo:");
             GitBinConsole.WriteLineNoPrefix("  items: {0}", remoteFiles.Length);
             GitBinConsole.WriteLineNoPrefix("  size:  {0}", GitBinFileInfoUtils.GetHumanReadableSize(remoteFiles));

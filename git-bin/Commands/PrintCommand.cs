@@ -1,5 +1,5 @@
 ﻿namespace GitBin.Commands
-{   
+{
     /// <summary>
     /// Used to print out a message.
     /// </summary>
