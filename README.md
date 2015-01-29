@@ -53,8 +53,8 @@ $ ls -lh brooklyn_bridge.jpg
 $ git add brooklyn_bridge.jpg
 [git-bin] Cleaning brooklyn_bridge.jpg
 
-$ git commit -m "Added JPG that's manage by git-bin"
-[dev 6adb9c6] Added JPG that's manage by git-bin
+$ git commit -m "Added JPG that is manage by git-bin"
+[dev 6adb9c6] Added JPG that is manage by git-bin
 <snip>
  
 $ git bin push
