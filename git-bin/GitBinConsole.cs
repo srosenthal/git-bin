@@ -42,19 +42,6 @@ namespace GitBin
         }
 
         /// <summary>
-        /// Write a message to the console. The message will be prefixed with an identifier indicating it originated
-        /// from this application. A newline will be inserted before and after the message, ensuring the message is on
-        /// its own line.
-        /// </summary>
-        /// <param name="message">The message to print to the console.</param>
-        /// <param name="args">Arguments to insert into the given message.</param>
-        public static void WriteNewLine(string message, params object[] args)
-        {
-            WriteLine();
-            Console.Error.WriteLine(Prefix + message, args);
-        }
-
-        /// <summary>
         /// Write a message to the console. No newline will be inserted after the message.
         /// </summary>
         /// <param name="message">The message to print to the console.</param>
