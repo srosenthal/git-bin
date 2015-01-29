@@ -58,7 +58,7 @@ namespace GitBin.Commands
                 }
                 catch (ಠ_ಠ e)
                 {
-                    GitBinConsole.WriteNewLine("Encountered an error pushing to the remote chunk cache {0}", e.Message);
+                    GitBinConsole.WriteNewLine("Encountered an error pushing to the remote chunk cache: {0}", e.Message);
                 }
             }
 

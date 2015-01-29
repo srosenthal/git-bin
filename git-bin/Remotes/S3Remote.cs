@@ -89,7 +89,14 @@ namespace GitBin.Remotes
             }
             catch (AmazonS3Exception e)
             {
+                if (e.ErrorCode.Equals("InvalidDigest"))
+                {
+                    throw new ಠ_ಠ("MD5 has is invalid. Data was malformed in transit.");
+                }
+                else
+                {
                 throw new ಠ_ಠ(GetMessageFromException(e));
+                }
             }
         }
 
