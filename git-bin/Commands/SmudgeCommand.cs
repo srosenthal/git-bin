@@ -87,7 +87,7 @@ namespace GitBin.Commands
         /// and writes it to the local cache.
         /// </summary>
         /// <param name="chunkHash">The specified hash for the chunk to be downloaded.</param>
-        /// <param name="progressListener">An entity that istens for progress events from the AsyncFileProcesso and 
+        /// <param name="progressListener">An entity that istens for progress events from the AsyncFileProcessor and 
         /// prints it out to the console.</param>
         private void DownloadChunk(string chunkHash, Action<int> progressListener)
         {
