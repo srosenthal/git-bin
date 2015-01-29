@@ -73,7 +73,7 @@ namespace GitBin.Remotes
 
         public void UploadFile(string sourceFilePath, string destinationFileName)
         {
-            string tempDestinationFileName = "partial_" + new Random().Next(0, 10000000) + "." + destinationFileName;
+            string tempDestinationFileName = destinationFileName + "." + new Random().Next(0, 10000000) + ".partial";
             var client = GetClient();
 
             // Step 1 - Prepare to upload the chunk to a temp file name
@@ -167,7 +167,7 @@ namespace GitBin.Remotes
         {
             if (_client == null)
             {
-                _client = AWSClientFactory.CreateAmazonS3Client( _key, _secretKey, _s3config);
+                _client = AWSClientFactory.CreateAmazonS3Client(_key, _secretKey, _s3config);
             }
 
             return _client;
