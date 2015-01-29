@@ -5,12 +5,17 @@ using System.Linq;
 namespace GitBin
 {
     /// <summary>
-    /// Tools used to work with the Git Bin file information.
+    /// Helper class for Git Bin files. Tools used to work with the Git Bin file information.
     /// </summary>
     public static class GitBinFileInfoUtils
     {
         private static string[] Suffixes = new[] { "B", "k", "M", "G", "T", "P", "E" };
 
+        /// <summary>
+        /// Returns a readable string of file information.
+        /// </summary>
+        /// <param name="fileInfos">Collection of file information.</param>
+        /// <returns>A string of file information that is readable.</returns>
         public static string GetHumanReadableSize(IEnumerable<GitBinFileInfo> fileInfos)
         {
             var totalSize = fileInfos.Sum(fi => fi.Size);
@@ -18,6 +23,11 @@ namespace GitBin
             return GetHumanReadableSize(totalSize);
         }
 
+        /// <summary>
+        /// Helper method.
+        /// </summary>
+        /// <param name="numberOfBytes">Size of the information in bytes.</param>
+        /// <returns>A string of file information that is readable.</returns>
         public static string GetHumanReadableSize(long numberOfBytes)
         {
             int suffixIndex = 0;
