@@ -44,15 +44,40 @@ namespace GitBin.Commands
                     GitBinConsole.Write("Uploading {0} chunks: ", filesToUpload.Length);
                 }
 
-                AsyncFileProcessor.ProcessFiles(filesToUpload,
-                    (files, index) =>
+                try
+                {
+                    AsyncFileProcessor.ProcessFiles(filesToUpload, (chunkHash) =>
                     {
-                        var file = filesToUpload[index];
-                        _remote.UploadFile(_cacheManager.GetPathForChunk(file), file);
+                        verifyChunkIntegrity(chunkHash);
+                        _remote.UploadFile(_cacheManager.GetPathForChunk(chunkHash), chunkHash);
                     });
-                
+                }
+                catch (InvalidDataException e)
+                {
+                    GitBinConsole.WriteNoPrefix("\n");
+                    GitBinConsole.WriteLine(e.Message);
+                }
+                catch (ಠ_ಠ e)
+                {
+                    GitBinConsole.WriteNoPrefix("\n");
+                    GitBinConsole.WriteLine("\nEncountered an error pushing to the remote chunk cache {0}", e.Message);
+                }
             }
+
             Console.WriteLine();
+        }
+
+        private void verifyChunkIntegrity(string chunkHash)
+        {
+            var chunkPath = _cacheManager.GetPathForChunk(chunkHash);
+            byte[] chunkData = File.ReadAllBytes(chunkPath);
+            var calculatedChunkHash = CacheManager.GetHashForChunk(chunkData, chunkData.Length);
+
+            if (!calculatedChunkHash.Equals(chunkHash))
+            {
+                throw new InvalidDataException("Chunk '" + chunkHash + "' is corrupted in the local cache, aborting. " +
+                    "Please correct the issue before continue.");
+            }
         }
     }
 }

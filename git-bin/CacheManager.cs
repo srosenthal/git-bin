@@ -8,7 +8,7 @@ namespace GitBin
 {
     public interface ICacheManager
     {
-        byte[] ReadChunkFromCache(string chunkName);
+        byte[] ReadChunkFromCache(string chunkHash);
 
         /// <summary>
         /// Write a chunk to the local cache for future (and current) use.
@@ -19,8 +19,8 @@ namespace GitBin
         string WriteChunkToCache(byte[] contents, int contentLength);
         GitBinFileInfo[] ListChunks();
         void ClearCache();
-        string[] GetChunksNotInCache(IEnumerable<string> filenamesToCheck);
-        string GetPathForChunk(string filename);
+        string[] GetChunksNotInCache(IEnumerable<string> chunkHashes);
+        string GetPathForChunk(string chunkHash);
     }
 
     public class CacheManager : ICacheManager
@@ -32,29 +32,29 @@ namespace GitBin
             _cacheDirectoryInfo = Directory.CreateDirectory(configurationProvider.CacheDirectory);
         }
 
-        public byte[] ReadChunkFromCache(string chunkName)
+        public byte[] ReadChunkFromCache(string chunkHash)
         {
-            var path = GetPathForChunk(chunkName);
+            var path = GetPathForChunk(chunkHash);
 
             if (!File.Exists(path))
-                throw new ಠ_ಠ("Tried to read file from cache that does not exist. [" + path + ']');
+                throw new ಠ_ಠ("Tried to read chunk from cache that does not exist. [" + chunkHash + ']');
 
             return File.ReadAllBytes(path);
         }
 
         public string WriteChunkToCache(byte[] contents, int contentLength)
         {
-            var chunkName = GetHashForChunk(contents, contentLength);
-            var path = GetPathForChunk(chunkName);
+            var chunkHash = GetHashForChunk(contents, contentLength);
+            var path = GetPathForChunk(chunkHash);
             
             if (File.Exists(path))
-                return chunkName;
+                return chunkHash;
 
             var filestream = new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.None, contentLength, FileOptions.WriteThrough);
             filestream.Write(contents, 0, contentLength);
             filestream.Close();
 
-            return chunkName;
+            return chunkHash;
         }
 
         public GitBinFileInfo[] ListChunks()
@@ -73,17 +73,20 @@ namespace GitBin
             }
         }
 
-        public string[] GetChunksNotInCache(IEnumerable<string> chuckNamesToCheck)
+        public string[] GetChunksNotInCache(IEnumerable<string> chunkHashes)
         {
-            var filenamesInCache = ListChunks().Select(fi => fi.Name);
-            var filenamesNotInCache = chuckNamesToCheck.Except(filenamesInCache);
+            var chunksInCache = ListChunks().Select(fi => fi.Name);
+            var chunksNotInCache = chunkHashes.Except(chunksInCache);
 
-            return filenamesNotInCache.ToArray();
+            // Try to remove any items from the list that clearly are not chunks, such as those files that don't have exactly 64 characters in their name.
+            chunksNotInCache = chunksNotInCache.Where(hash => hash.Length == 32 * 2);
+
+            return chunksNotInCache.ToArray();
         }
 
-        public string GetPathForChunk(string chunkName)
+        public string GetPathForChunk(string chunkHash)
         {
-            return Path.Combine(_cacheDirectoryInfo.FullName, chunkName);
+            return Path.Combine(_cacheDirectoryInfo.FullName, chunkHash);
         }
 
         public static string GetHashForChunk(byte[] chunkBuffer, int chunkLength)

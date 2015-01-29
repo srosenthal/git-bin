@@ -61,36 +61,36 @@ namespace GitBin.Commands
             GitBinConsole.WriteLine();
         }
 
-        private void DownloadChunk(string[] filesToDownload, int indexToDownload)
+        private void DownloadChunk(string chunkHash)
         {
             const int MAX_DOWNLOAD_ATTEMPT_COUNT = 10;
 
-            var chunkName = filesToDownload[indexToDownload];
-            var fullPath = _cacheManager.GetPathForChunk(chunkName);
+            var fullPath = _cacheManager.GetPathForChunk(chunkHash);
 
             try
             {
                 var attemptCount = 0;
                 for (; attemptCount < MAX_DOWNLOAD_ATTEMPT_COUNT; attemptCount++)
                 {
-                    var chunkData = _remote.DownloadFile(chunkName);
-                    var chunkHash = CacheManager.GetHashForChunk(chunkData, chunkData.Length);
+                    var chunkData = _remote.DownloadFile(chunkHash);
+                    var computedChunkHash = CacheManager.GetHashForChunk(chunkData, chunkData.Length);
 
-                    // A chunk's name is its hash. If a download's name and hash don't match then try and download it again, because it failed the first time.
-                    if (chunkName.Equals(chunkHash))
+                    // A chunk's name is its hash. If a download's name and hash don't match then try and download it
+                    // again, because it failed the first time.
+                    if (chunkHash.Equals(computedChunkHash))
                     {
                         _cacheManager.WriteChunkToCache(chunkData, chunkData.Length);
                         break;
                     }
                     else
                     {
-                        Console.Error.WriteLine("Error downloading chunk '" + chunkName + "'. Retrying...");
+                        Console.Error.WriteLine("Error downloading chunk '" + chunkHash + "'. Retrying...");
                     }
                 }
 
                 if (attemptCount >= MAX_DOWNLOAD_ATTEMPT_COUNT)
                 {
-                    throw new Exception("Exceeded retry attempts when downloading chunk: " + chunkName);
+                    throw new Exception("Exceeded retry attempts when downloading chunk: " + chunkHash);
                 }
             }
             catch (ಠ_ಠ)

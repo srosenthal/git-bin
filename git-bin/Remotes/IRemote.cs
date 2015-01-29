@@ -7,8 +7,8 @@ namespace GitBin.Remotes
     {
         GitBinFileInfo[] ListFiles();
 
-        void UploadFile(string fullPath, string key);
-        byte[] DownloadFile(string key);
+        void UploadFile(string sourceFilePath, string destinationFileName);
+        byte[] DownloadFile(string fileName);
 
         event Action<int> ProgressChanged;
     }

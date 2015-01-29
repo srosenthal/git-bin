@@ -44,8 +44,9 @@ namespace GitBin.Commands
 
                 if ((totalBytesInChunk == chunkBuffer.Length || numberOfBytesRead == 0) && totalBytesInChunk > 0)
                 {
-                    var chunkName = _cacheManager.WriteChunkToCache(chunkBuffer, totalBytesInChunk);
-                    document.RecordChunk(chunkName);
+                    var chunkHash = _cacheManager.WriteChunkToCache(chunkBuffer, totalBytesInChunk);
+
+                    document.RecordChunk(chunkHash);
                     totalBytesInChunk = 0;
                 }
             } while (numberOfBytesRead > 0);

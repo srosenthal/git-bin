@@ -8,32 +8,30 @@ namespace GitBin
 {
     public static class AsyncFileProcessor
     {
-        public static void ProcessFiles(string[] filesToDownload, Action<string[], int> fileProcessor)
+        public static void ProcessFiles(string[] filesToProcess, Action<string> fileProcessor)
         {
             object sync = new object();
 
             int totalFinished = 0;
-
-            int nextIndexToDownload = 0;
-
-            int totalDownloading = 0;
-            int maxSimultaneousDownloads = 10;
+            int nextIndexToProcess = 0;
+            int totalProcessing = 0;
+            int maxSimultaneousProcessingOperations = 10;
             Exception lastException = null;
             int nextToReport = 10;
 
             lock (sync)
             {
-                while (nextIndexToDownload < filesToDownload.Length)
+                while (nextIndexToProcess < filesToProcess.Length)
                 {
-                    int indexToDownload = nextIndexToDownload;
-                    totalDownloading++;
+                    string fileToProcess = filesToProcess[nextIndexToProcess];
+                    totalProcessing++;
 
                     ThreadPool.QueueUserWorkItem(state =>
                     {
                         Exception exception = null;
                         try
                         {
-                            fileProcessor(filesToDownload, indexToDownload);
+                            fileProcessor(fileToProcess);
                         }
                         catch (Exception e)
                         {
@@ -42,10 +40,10 @@ namespace GitBin
 
                         lock (sync)
                         {
-                            totalDownloading--;
+                            totalProcessing--;
                             totalFinished++;
 
-                            var percentCompleted = (int)(100 * totalFinished / (float)filesToDownload.Length);
+                            var percentCompleted = (int)(100 * totalFinished / (float)filesToProcess.Length);
 
                             if (percentCompleted >= nextToReport)
                             {
@@ -66,7 +64,7 @@ namespace GitBin
                         }
                     });
 
-                    while (lastException == null && totalDownloading >= maxSimultaneousDownloads)
+                    while (lastException == null && totalProcessing >= maxSimultaneousProcessingOperations)
                     {
                         Monitor.Wait(sync);
                     }
@@ -76,10 +74,10 @@ namespace GitBin
                         throw lastException;
                     }
 
-                    nextIndexToDownload++;
+                    nextIndexToProcess++;
                 }
 
-                while (lastException == null && totalFinished < filesToDownload.Length)
+                while (lastException == null && totalFinished < filesToProcess.Length)
                 {
                     Monitor.Wait(sync);
                 }
