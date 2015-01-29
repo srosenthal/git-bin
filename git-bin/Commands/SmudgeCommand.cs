@@ -48,10 +48,9 @@ namespace GitBin.Commands
                 DownloadMissingChunks(document.ChunkHashes);
                 OutputReassembledChunks(document.ChunkHashes);
             }
-            catch (Exception e)
+            catch (ಠ_ಠ e)
             {
-                GitBinConsole.WriteNewLine(e.Message);
-                Console.Error.Write(e);
+                GitBinConsole.WriteNewLine("Encountered an error downloading chunk: {0}", e.Message);
             }
         }
 
@@ -79,14 +78,7 @@ namespace GitBin.Commands
                     GitBinConsole.WriteNoPrefix(" Downloading {0} chunks: ", chunksToDownload.Length);
                 }
 
-                try
-                {
-                    AsyncFileProcessor.ProcessFiles(chunksToDownload, DownloadChunk);
-                }
-                catch (ಠ_ಠ e)
-                {
-                    GitBinConsole.WriteNewLine("Encountered an error downloading chunk: {0}", e.Message);
-                }
+                AsyncFileProcessor.ProcessFiles(chunksToDownload, DownloadChunk);
             }
         }
 

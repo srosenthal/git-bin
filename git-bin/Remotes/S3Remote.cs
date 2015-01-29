@@ -145,7 +145,7 @@ namespace GitBin.Remotes
                 }
                 else
                 {
-                    throw new ಠ_ಠ("Error downloading file from S3: " + GetMessageFromException(e));
+                    throw new ಠ_ಠ(GetMessageFromException(e));
                 }
             }
         }
