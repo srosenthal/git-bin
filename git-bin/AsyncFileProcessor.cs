@@ -78,9 +78,9 @@ namespace GitBin
                             {
                                 lastException = exception;
                             }
-                        }
 
-                        Monitor.Pulse(sync);
+                            Monitor.Pulse(sync);
+                        }
                     });
 
                     // Wait for the number of outstanding operations to go lower than our max amount.
