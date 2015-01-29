@@ -11,6 +11,9 @@ using Amazon.Runtime;
 
 namespace GitBin.Remotes
 {
+    /// <summary>
+    /// Enables files to be stored and retrieved on Amazon's S3 service.
+    /// </summary>
     public class S3Remote : IRemote
     {
         private const string S3KeyConfigName = "s3key";

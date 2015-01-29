@@ -4,19 +4,22 @@ using System.Linq;
 
 namespace GitBin.Remotes
 {
+    /// <summary>
+    /// Prints progress percentage to the console.
+    /// </summary>
     public class RemoteProgressPrinter : IDisposable
     {
-        private readonly int _chunkCount;
-        private readonly int[] mostRecentChunkPercentages;
-        private int summedChunkPercentage = 0;
+        private readonly int _fileCount;
+        private readonly int[] mostRecentFilePercentages;
+        private int summedFilePercentage = 0;
 
-        //private double lastPrintedPercentage = -1;
         private string lastPrintedStatusString = "";
 
-        public RemoteProgressPrinter(int chunkCount)
+        /// <param name="chunkCount">The number of files that this progress printer will be tracking.</param>
+        public RemoteProgressPrinter(int fileCount)
         {
-            _chunkCount = chunkCount;
-            mostRecentChunkPercentages = Enumerable.Repeat(0, chunkCount).ToArray();
+            _fileCount = fileCount;
+            mostRecentFilePercentages = Enumerable.Repeat(0, fileCount).ToArray();
         }
 
         public void Dispose()
@@ -24,12 +27,21 @@ namespace GitBin.Remotes
             GitBinConsole.WriteNoPrefix(Environment.NewLine);
         }
 
-        public void OnProgressChanged(int chunkNumber, int percentageComplete)
+        /// <summary>
+        /// Method that should be called when progress changes for a file. Prints the total percentage (for all files)
+        /// to the console.
+        /// </summary>
+        /// <param name="fileNumber">
+        /// The number (from 0 to the count provided in the constructor) of the file whose
+        /// progress has changed.
+        /// </param>
+        /// <param name="percentageComplete">Percentage complete (0-100).</param>
+        public void OnProgressChanged(int fileNumber, int percentageComplete)
         {
-            var chunkProgressDelta = percentageComplete - mostRecentChunkPercentages[chunkNumber];
-            mostRecentChunkPercentages[chunkNumber] = percentageComplete;
-            summedChunkPercentage += chunkProgressDelta;
-            double totalPercentage = (double)summedChunkPercentage / _chunkCount;
+            var chunkProgressDelta = percentageComplete - mostRecentFilePercentages[fileNumber];
+            mostRecentFilePercentages[fileNumber] = percentageComplete;
+            summedFilePercentage += chunkProgressDelta;
+            double totalPercentage = (double)summedFilePercentage / _fileCount;
 
             string percentageToPrint;
             lock (this)
