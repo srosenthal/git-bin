@@ -79,7 +79,14 @@ namespace GitBin.Commands
                     GitBinConsole.WriteNoPrefix(" Downloading {0} chunks: ", chunksToDownload.Length);
                 }
 
-                AsyncFileProcessor.ProcessFiles(chunksToDownload, DownloadChunk);
+                try
+                {
+                    AsyncFileProcessor.ProcessFiles(chunksToDownload, DownloadChunk);
+                }
+                catch (ಠ_ಠ e)
+                {
+                    GitBinConsole.WriteNewLine("Encountered an error downloading chunk: {0}", e.Message);
+                }
             }
         }
 
@@ -105,7 +112,7 @@ namespace GitBin.Commands
             }
             else
             {
-                GitBinConsole.WriteNewLine("Downloaded a corrupted chunk (" + chunkHash + "). Aborting.");
+                throw new ಠ_ಠ("Downloaded a corrupted chunk (" + chunkHash + ")");
             }
         }
 

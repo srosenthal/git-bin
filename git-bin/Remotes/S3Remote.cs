@@ -100,7 +100,7 @@ namespace GitBin.Remotes
             {
                 if (e.ErrorCode.Equals("InvalidDigest"))
                 {
-                    throw new ಠ_ಠ("MD5 has is invalid. Data was malformed in transit.");
+                    throw new ಠ_ಠ("MD5 has is invalid. Data was malformed in transit");
                 }
                 else
                 {
@@ -139,7 +139,14 @@ namespace GitBin.Remotes
             }
             catch (AmazonS3Exception e)
             {
-                throw new ಠ_ಠ("Error downloading chunk from S3: " + GetMessageFromException(e));
+                if (e.ErrorCode.Equals("NoSuchKey"))
+                {
+                    throw new ಠ_ಠ("File not found on S3");
+                }
+                else
+                {
+                    throw new ಠ_ಠ("Error downloading file from S3: " + GetMessageFromException(e));
+                }
             }
         }
 
