@@ -31,7 +31,7 @@ namespace GitBin.Commands
 
             if (filesToUpload.Length == 0)
             {
-                GitBinConsole.Write("All chunks already present on remote");
+                GitBinConsole.WriteLineNoPrefix("All chunks already present on remote");
             }
             else
             {
@@ -51,20 +51,18 @@ namespace GitBin.Commands
                         verifyChunkIntegrity(chunkHash);
                         _remote.UploadFile(_cacheManager.GetPathForChunk(chunkHash), chunkHash);
                     });
+                    Console.WriteLine();
                 }
                 catch (InvalidDataException e)
                 {
-                    GitBinConsole.WriteNoPrefix("\n");
-                    GitBinConsole.WriteLine(e.Message);
+                    GitBinConsole.WriteNewLine(e.Message);
                 }
                 catch (ಠ_ಠ e)
                 {
-                    GitBinConsole.WriteNoPrefix("\n");
-                    GitBinConsole.WriteLine("\nEncountered an error pushing to the remote chunk cache {0}", e.Message);
+                    GitBinConsole.WriteNewLine("Encountered an error pushing to the remote chunk cache {0}", e.Message);
                 }
             }
 
-            Console.WriteLine();
         }
 
         private void verifyChunkIntegrity(string chunkHash)

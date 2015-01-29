@@ -156,7 +156,7 @@ namespace GitBin.Remotes
             }
             catch (AmazonS3Exception e)
             {
-                throw new ಠ_ಠ(GetMessageFromException(e));
+                throw new ಠ_ಠ("Error downloading chunk from S3: " + GetMessageFromException(e));
             }
         }
 

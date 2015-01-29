@@ -42,7 +42,7 @@ namespace GitBin.Commands
 
             if (chunksToDownload.Length == 0)
             {
-                GitBinConsole.WriteNoPrefix(" All chunks already present in cache");
+                GitBinConsole.WriteLineNoPrefix(" All chunks already present in cache");
             }
             else
             {
@@ -55,10 +55,17 @@ namespace GitBin.Commands
                     GitBinConsole.WriteNoPrefix(" Downloading {0} chunks: ", chunksToDownload.Length);
                 }
 
-                AsyncFileProcessor.ProcessFiles(chunksToDownload, DownloadChunk);
+                try
+                {
+                    AsyncFileProcessor.ProcessFiles(chunksToDownload, DownloadChunk);
+                    GitBinConsole.WriteLine();
+                }
+                catch (ಠ_ಠ e)
+                {
+                    GitBinConsole.WriteNewLine(e.Message);
+                }
             }
 
-            GitBinConsole.WriteLine();
         }
 
         private void DownloadChunk(string chunkHash)
@@ -67,36 +74,28 @@ namespace GitBin.Commands
 
             var fullPath = _cacheManager.GetPathForChunk(chunkHash);
 
-            try
+            var attemptCount = 0;
+            for (; attemptCount < MAX_DOWNLOAD_ATTEMPT_COUNT; attemptCount++)
             {
-                var attemptCount = 0;
-                for (; attemptCount < MAX_DOWNLOAD_ATTEMPT_COUNT; attemptCount++)
-                {
-                    var chunkData = _remote.DownloadFile(chunkHash);
-                    var computedChunkHash = CacheManager.GetHashForChunk(chunkData, chunkData.Length);
+                var chunkData = _remote.DownloadFile(chunkHash);
+                var computedChunkHash = CacheManager.GetHashForChunk(chunkData, chunkData.Length);
 
-                    // A chunk's name is its hash. If a download's name and hash don't match then try and download it
-                    // again, because it failed the first time.
-                    if (chunkHash.Equals(computedChunkHash))
-                    {
-                        _cacheManager.WriteChunkToCache(chunkData, chunkData.Length);
-                        break;
-                    }
-                    else
-                    {
-                        Console.Error.WriteLine("Error downloading chunk '" + chunkHash + "'. Retrying...");
-                    }
+                // A chunk's name is its hash. If a download's name and hash don't match then try and download it
+                // again, because it failed the first time.
+                if (chunkHash.Equals(computedChunkHash))
+                {
+                    _cacheManager.WriteChunkToCache(chunkData, chunkData.Length);
+                    break;
                 }
-
-                if (attemptCount >= MAX_DOWNLOAD_ATTEMPT_COUNT)
+                else
                 {
-                    throw new Exception("Exceeded retry attempts when downloading chunk: " + chunkHash);
+                    GitBinConsole.WriteNewLine("Error downloading chunk '" + chunkHash + "'. Retrying...");
                 }
             }
-            catch (ಠ_ಠ)
+
+            if (attemptCount >= MAX_DOWNLOAD_ATTEMPT_COUNT)
             {
-                File.Delete(fullPath);
-                throw;
+                throw new ಠ_ಠ("Exceeded retry attempts when downloading chunk: " + chunkHash);
             }
         }
 

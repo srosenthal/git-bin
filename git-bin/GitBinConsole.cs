@@ -21,6 +21,12 @@ namespace GitBin
             Console.Error.WriteLine(Prefix + message, args);
         }
 
+        public static void WriteNewLine(string message, params object[] args)
+        {
+            WriteLine();
+            Console.Error.WriteLine(Prefix + message, args);
+        }
+
         public static void WriteNoPrefix(string message)
         {
             Console.Error.Write(message);
