@@ -54,22 +54,28 @@ namespace GitBin.Remotes
             listRequest.BucketName = _bucketName;
             listRequest.MaxKeys = 250000; // Arbitrarily large to avoid making multiple round-trips.
 
-            ListObjectsResponse listResponse;
-
             do
             {
-                listResponse = client.ListObjects(listRequest);
+                ListObjectsResponse response = client.ListObjects(listRequest);
 
-                if (listResponse.S3Objects.Any())
+                // Process response.
+                if (response.S3Objects.Any())
                 {
-                    var keys = listResponse.S3Objects.Select(o => new GitBinFileInfo(o.Key, o.Size));
+                    var keys = response.S3Objects.Select(o => new GitBinFileInfo(o.Key, o.Size));
 
                     remoteFiles.AddRange(keys);
-
-                    listRequest.Marker = listResponse.NextMarker;
                 }
-            }
-            while (listResponse.IsTruncated);
+
+                // If response is truncated, set the marker to get the next set of keys.
+                if (response.IsTruncated)
+                {
+                    listRequest.Marker = response.NextMarker;
+                }
+                else
+                {
+                    listRequest = null;
+                }
+            } while (listRequest != null);
 
             return remoteFiles.ToArray();
         }
@@ -94,7 +100,7 @@ namespace GitBin.Remotes
             {
                 if (e.ErrorCode.Equals("InvalidDigest"))
                 {
-                    throw new ಠ_ಠ("MD5 has is invalid. Data was malformed in transit.");
+                    throw new ಠ_ಠ("MD5 has is invalid. Data was malformed in transit");
                 }
                 else
                 {
@@ -133,7 +139,14 @@ namespace GitBin.Remotes
             }
             catch (AmazonS3Exception e)
             {
-                throw new ಠ_ಠ("Error downloading chunk from S3: " + GetMessageFromException(e));
+                if (e.ErrorCode.Equals("NoSuchKey"))
+                {
+                    throw new ಠ_ಠ("File not found on S3");
+                }
+                else
+                {
+                    throw new ಠ_ಠ("Error downloading file from S3: " + GetMessageFromException(e));
+                }
             }
         }
 
