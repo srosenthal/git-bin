@@ -41,6 +41,8 @@ namespace GitBin.Remotes
             s3config.UseHttp = !String.Equals(configurationProvider.Protocol, "HTTPS",
                 StringComparison.OrdinalIgnoreCase);
             s3config.RegionEndpoint = RegionEndpoint.GetBySystemName(configurationProvider.S3SystemName);
+            s3config.ReadWriteTimeout = TimeSpan.FromSeconds(10000);
+            s3config.Timeout = TimeSpan.FromSeconds(10000);
 
             _s3config = s3config;
         }
@@ -116,20 +118,20 @@ namespace GitBin.Remotes
             var getRequest = new GetObjectRequest();
             getRequest.BucketName = _bucketName;
             getRequest.Key = fileName;
-
+         
             try
             {
                 using (var getResponse = client.GetObject(getRequest))
                 {
                     var fileContent = new byte[getResponse.ContentLength];
-
+                    
                     var numberOfBytesRead = 0;
                     var totalBytesRead = 0;
 
                     do
                     {
                         numberOfBytesRead = getResponse.ResponseStream.Read(fileContent, totalBytesRead, fileContent.Length - totalBytesRead);
-
+                        
                         totalBytesRead += numberOfBytesRead;
                         progressListener.Invoke((totalBytesRead * 100) / fileContent.Length);
                     } while (numberOfBytesRead > 0 && totalBytesRead < fileContent.Length);
