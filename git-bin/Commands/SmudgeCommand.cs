@@ -43,15 +43,8 @@ namespace GitBin.Commands
 
             GitBinConsole.Write("Smudging {0}:", document.Filename);
 
-            try
-            {
-                DownloadMissingChunks(document.ChunkHashes);
-                OutputReassembledChunks(document.ChunkHashes);
-            }
-            catch (ಠ_ಠ e)
-            {
-                GitBinConsole.WriteLine("Encountered an error downloading chunk: {0}", e.Message);
-            }
+            DownloadMissingChunks(document.ChunkHashes);
+            OutputReassembledChunks(document.ChunkHashes);
         }
 
         /// <summary>
