@@ -123,29 +123,40 @@ namespace GitBin.Remotes
                 {
                     var fileContent = new byte[getResponse.ContentLength];
 
-                    var numberOfBytesRead = 0;
-                    var totalBytesRead = 0;
-
-                    do
+                    if (getResponse.ContentLength > 0)
                     {
-                        numberOfBytesRead = getResponse.ResponseStream.Read(fileContent, totalBytesRead, fileContent.Length - totalBytesRead);
+                        var numberOfBytesRead = 0;
+                        var totalBytesRead = 0;
 
-                        totalBytesRead += numberOfBytesRead;
-                        progressListener.Invoke((totalBytesRead * 100) / fileContent.Length);
-                    } while (numberOfBytesRead > 0 && totalBytesRead < fileContent.Length);
+                        do
+                        {
+                            numberOfBytesRead = getResponse.ResponseStream.Read(fileContent, totalBytesRead, fileContent.Length - totalBytesRead);
+                            if (numberOfBytesRead == 0)
+                            {
+                                throw new ಠ_ಠ(String.Format("S3 download stream ended before complete file was read: {0}", fileName));
+                            }
+
+                            totalBytesRead += numberOfBytesRead;
+                            progressListener.Invoke((totalBytesRead * 100) / fileContent.Length);
+                        } while (totalBytesRead < fileContent.Length);
+                    }
+                    else
+                    {
+                        progressListener.Invoke(100);
+                    }
 
                     return fileContent;
                 }
             }
             catch (AmazonS3Exception e)
             {
-                if (e.ErrorCode.Equals("NoSuchKey"))
+                if (e.ErrorCode != null && e.ErrorCode.Equals("NoSuchKey"))
                 {
-                    throw new ಠ_ಠ("File not found on S3");
+                    throw new ಠ_ಠ(String.Format("File not found on S3: {0}", fileName));
                 }
                 else
                 {
-                    throw new ಠ_ಠ(GetMessageFromException(e));
+                    throw e;
                 }
             }
         }
