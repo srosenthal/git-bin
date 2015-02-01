@@ -56,22 +56,11 @@ namespace GitBin.Commands
                     GitBinConsole.Write("Uploading {0} chunks: ", filesToUpload.Length);
                 }
 
-                try
+                AsyncFileProcessor.ProcessFiles(filesToUpload, 1, (chunkHash, progressListener) =>
                 {
-                    AsyncFileProcessor.ProcessFiles(filesToUpload, 1, (chunkHash, progressListener) =>
-                    {
-                        verifyChunkIntegrity(chunkHash);
-                        _remote.UploadFile(_cacheManager.GetPathForChunk(chunkHash), chunkHash, progressListener);
-                    });
-                }
-                catch (InvalidDataException e)
-                {
-                    GitBinConsole.WriteLine(e.Message);
-                }
-                catch (ಠ_ಠ e)
-                {
-                    GitBinConsole.WriteLine("Encountered an error uploading chunk: {0}", e.Message);
-                }
+                    verifyChunkIntegrity(chunkHash);
+                    _remote.UploadFile(_cacheManager.GetPathForChunk(chunkHash), chunkHash, progressListener);
+                });
             }
 
         }
