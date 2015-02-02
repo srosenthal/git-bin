@@ -20,7 +20,7 @@ namespace GitBin.Remotes
         private const string S3SecretKeyConfigName = "s3secretKey";
         private const string S3BucketConfigName = "s3bucket";
 
-        private const int RequestTimeoutInMinutes = 60;
+        private const int RequestTimeoutInMinutes = 10;
         private const string InvalidAccessKeyErrorCode = "InvalidAccessKeyId";
         private const string InvalidSecurityErrorCode = "InvalidSecurity";
 
@@ -41,8 +41,9 @@ namespace GitBin.Remotes
             s3config.UseHttp = !String.Equals(configurationProvider.Protocol, "HTTPS",
                 StringComparison.OrdinalIgnoreCase);
             s3config.RegionEndpoint = RegionEndpoint.GetBySystemName(configurationProvider.S3SystemName);
-            s3config.ReadWriteTimeout = TimeSpan.FromSeconds(10000);
-            s3config.Timeout = TimeSpan.FromSeconds(10000);
+
+            s3config.ReadWriteTimeout = TimeSpan.FromMinutes(RequestTimeoutInMinutes);
+            s3config.Timeout = TimeSpan.FromMinutes(RequestTimeoutInMinutes);
 
             _s3config = s3config;
         }
@@ -90,7 +91,7 @@ namespace GitBin.Remotes
             putRequest.BucketName = _bucketName;
             putRequest.FilePath = sourceFilePath;
             putRequest.Key = destinationFileName;
-            putRequest.Timeout = new TimeSpan(0, RequestTimeoutInMinutes, 0);
+            putRequest.Timeout = TimeSpan.FromMinutes(RequestTimeoutInMinutes);
             putRequest.MD5Digest = GetMd5Hash(sourceFilePath);
             putRequest.StreamTransferProgress += (s, args) => progressListener(args.PercentDone);
 
@@ -118,20 +119,20 @@ namespace GitBin.Remotes
             var getRequest = new GetObjectRequest();
             getRequest.BucketName = _bucketName;
             getRequest.Key = fileName;
-         
+
             try
             {
                 using (var getResponse = client.GetObject(getRequest))
                 {
                     var fileContent = new byte[getResponse.ContentLength];
-                    
+
                     var numberOfBytesRead = 0;
                     var totalBytesRead = 0;
 
                     do
                     {
                         numberOfBytesRead = getResponse.ResponseStream.Read(fileContent, totalBytesRead, fileContent.Length - totalBytesRead);
-                        
+
                         totalBytesRead += numberOfBytesRead;
                         progressListener.Invoke((totalBytesRead * 100) / fileContent.Length);
                     } while (numberOfBytesRead > 0 && totalBytesRead < fileContent.Length);
