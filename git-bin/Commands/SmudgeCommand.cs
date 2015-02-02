@@ -2,8 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using GitBin.Remotes;
-using System.Threading;
-using System.Diagnostics;
 
 namespace GitBin.Commands
 {
@@ -71,7 +69,14 @@ namespace GitBin.Commands
                     GitBinConsole.WriteNoPrefix(" Downloading {0} chunks: ", chunksToDownload.Length);
                 }
 
-                AsyncFileProcessor.ProcessFiles(chunksToDownload, DownloadChunk);
+                try
+                {
+                    AsyncFileProcessor.ProcessFiles(chunksToDownload, DownloadChunk);
+                }
+                catch (ಠ_ಠ e)
+                {
+                    throw new ಠ_ಠ(String.Format("Encountered an error downloading chunk: {0}", e.Message));
+                }
             }
         }
 
@@ -102,9 +107,9 @@ namespace GitBin.Commands
         }
 
         /// <summary>
-        /// Reassmbles the chunks and writes it out to the console.
+        /// Reassembles the chunks and writes it out to the console.
         /// </summary>
-        /// <param name="chunkHashes">A collection of chunks to be displayed.</param>
+        /// <param name="chunkHashes">A collection of chunks to be reassembled.</param>
         private void OutputReassembledChunks(IEnumerable<string> chunkHashes)
         {
             var stdout = Console.OpenStandardOutput();

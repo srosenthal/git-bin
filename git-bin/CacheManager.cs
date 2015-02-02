@@ -66,9 +66,19 @@ namespace GitBin
             var path = GetPathForChunk(chunkHash);
 
             if (!File.Exists(path))
+            {
                 throw new ಠ_ಠ("Tried to read chunk from cache that does not exist. [" + chunkHash + ']');
+            }
 
-            return File.ReadAllBytes(path);
+            byte[] chunkContents = File.ReadAllBytes(path);
+            string computedChunkHash = GetHashForChunk(chunkContents, chunkContents.Length);
+
+            if (!computedChunkHash.Equals(chunkHash))
+            {
+                throw new ಠ_ಠ("Chunk '" + chunkHash + "' is corrupted in the local cache, aborting.");
+            }
+
+            return chunkContents;
         }
 
         public string WriteChunkToCache(byte[] contents, int contentLength)
