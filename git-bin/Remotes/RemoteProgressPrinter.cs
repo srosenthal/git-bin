@@ -38,15 +38,14 @@ namespace GitBin.Remotes
         /// <param name="percentageComplete">Percentage complete (0-100).</param>
         public void OnProgressChanged(int fileNumber, int percentageComplete)
         {
-            var chunkProgressDelta = percentageComplete - mostRecentFilePercentages[fileNumber];
-            mostRecentFilePercentages[fileNumber] = percentageComplete;
-            summedFilePercentage += chunkProgressDelta;
-            double totalPercentage = (double)summedFilePercentage / _fileCount;
-
-            string percentageToPrint;
             lock (this)
             {
-                percentageToPrint = String.Format("{0:N2}%", totalPercentage);
+                var chunkProgressDelta = percentageComplete - mostRecentFilePercentages[fileNumber];
+                mostRecentFilePercentages[fileNumber] = percentageComplete;
+                summedFilePercentage += chunkProgressDelta;
+                double totalPercentage = (double)summedFilePercentage / _fileCount;
+
+                string percentageToPrint = String.Format("{0:N2}% ", totalPercentage);
 
                 GitBinConsole.WriteNoPrefix(new String('\b', lastPrintedStatusString.Length) + percentageToPrint);
                 GitBinConsole.Flush();

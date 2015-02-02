@@ -64,9 +64,16 @@ namespace GitBin.Remotes
                 // Process response.
                 if (response.S3Objects.Any())
                 {
-                    var keys = response.S3Objects.Select(o => new GitBinFileInfo(o.Key, o.Size));
+                    try
+                    {
+                        var keys = response.S3Objects.Select(o => new GitBinFileInfo(o.Key, o.Size));
 
-                    remoteFiles.AddRange(keys);
+                        remoteFiles.AddRange(keys);
+                    }
+                    catch (AmazonS3Exception e)
+                    {
+                        throw new ಠ_ಠ(GetMessageFromException(e));
+                    }
                 }
 
                 // If response is truncated, set the marker to get the next set of keys.
@@ -107,7 +114,7 @@ namespace GitBin.Remotes
                 }
                 else
                 {
-                    throw e;
+                    throw new ಠ_ಠ(GetMessageFromException(e));
                 }
             }
         }
@@ -133,10 +140,12 @@ namespace GitBin.Remotes
 
                         do
                         {
-                            numberOfBytesRead = getResponse.ResponseStream.Read(fileContent, totalBytesRead, fileContent.Length - totalBytesRead);
+                            numberOfBytesRead = getResponse.ResponseStream.Read(fileContent, totalBytesRead,
+                                fileContent.Length - totalBytesRead);
                             if (numberOfBytesRead == 0)
                             {
-                                throw new ಠ_ಠ(String.Format("S3 download stream ended before complete file was read: {0}", fileName));
+                                throw new ಠ_ಠ(String.Format(
+                                    "S3 download stream ended before complete file was read: {0}", fileName));
                             }
 
                             totalBytesRead += numberOfBytesRead;
@@ -159,7 +168,7 @@ namespace GitBin.Remotes
                 }
                 else
                 {
-                    throw e;
+                    throw new ಠ_ಠ(GetMessageFromException(e));
                 }
             }
         }
