@@ -94,6 +94,12 @@ When a file is checked out the YAML gets passed to the smudge filter. The smudge
 
 ## Optional configuration
 
+Enforces the Git command to fail when git-bin fails. Forces Git to pay attention to a git-bin error.
+
+```bash
+$ git config --global filter.bin.required true
+```
+
 The chunk size defaults to 1M. If you want to change this for some reason you can set it like any other value in your git config:
 
 ```bash
