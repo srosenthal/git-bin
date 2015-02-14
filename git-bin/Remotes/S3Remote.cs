@@ -169,6 +169,8 @@ namespace GitBin.Remotes
                     {
                         // Ignore this exception and allow retry mechanism to take place
                     }
+
+                    attemptCount++;
                 }
 
                 throw new ಠ_ಠ(String.Format("File could not be successfully download after {0} attempts: {1}", attemptMax, fileName));
