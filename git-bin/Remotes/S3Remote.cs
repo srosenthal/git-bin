@@ -177,7 +177,17 @@ namespace GitBin.Remotes
         {
             if (_client == null)
             {
-                _client = AWSClientFactory.CreateAmazonS3Client(_key, _secretKey, _s3config);
+                if (_key != null && _secretKey != null)
+                {
+                    // We have AWS credentials, so use them
+                    _client = AWSClientFactory.CreateAmazonS3Client(_key, _secretKey, _s3config);
+                }
+                else
+                {
+                     // Credentials were not explicitly provided
+                     // We may be on EC2 so try using Instance Profile Credentials
+                    _client = AWSClientFactory.CreateAmazonS3Client(_s3config);
+                }
             }
 
             return _client;

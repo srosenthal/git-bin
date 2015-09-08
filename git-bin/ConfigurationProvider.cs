@@ -89,8 +89,8 @@ namespace GitBin
 
             this.S3SystemName = GetString(S3SystemConfigName, DefaultS3SystemName);
             this.S3Bucket = GetString(S3BucketConfigName);
-            this.S3Key = GetString(S3KeyConfigName);
-            this.S3SecretKey = GetString(S3SecretKeyConfigName);
+            this.S3Key = GetString(S3KeyConfigName, null);
+            this.S3SecretKey = GetString(S3SecretKeyConfigName, null);
         }
 
         private Dictionary<string, string> GetConfigurationOptions()
